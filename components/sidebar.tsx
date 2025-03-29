@@ -40,22 +40,22 @@ export default function Sidebar() {
     const menuItems: MenuItem[] = [
         {
             name: '模板管理',
-            icon: <LayoutTemplate size={20} data-oid=".q953oi" />,
+            icon: <LayoutTemplate size={20} data-oid="zhpinla" />,
             href: '/templates',
         },
-        { name: '告警管理', icon: <Bell size={20} data-oid="68d69:n" />, href: '/alerts' },
-        { name: '监控项管理', icon: <Activity size={20} data-oid="bthlfm-" />, href: '/monitors' },
+        { name: '告警管理', icon: <Bell size={20} data-oid="dayoaf5" />, href: '/alerts' },
+        { name: '监控项管理', icon: <Activity size={20} data-oid="tjp.eds" />, href: '/monitors' },
         {
             name: '安装管理',
-            icon: <Download size={20} data-oid="rubpf35" />,
+            icon: <Download size={20} data-oid="95pm69n" />,
             href: '/installation',
         },
-        { name: '业务监控', icon: <BarChart2 size={20} data-oid="kgdp1n-" />, href: '/business' },
-        { name: '巡检报告', icon: <FileText size={20} data-oid="8ys7f1n" />, href: '/reports' },
-        { name: 'CMDB', icon: <Database size={20} data-oid="..fmjeo" />, href: '/cmdb' },
+        { name: '业务监控', icon: <BarChart2 size={20} data-oid="wnw:.b." />, href: '/business' },
+        { name: '巡检报告', icon: <FileText size={20} data-oid="11166jp" />, href: '/reports' },
+        { name: 'CMDB', icon: <Database size={20} data-oid="av4by0o" />, href: '/cmdb' },
         {
             name: '扩展商店',
-            icon: <ShoppingBag size={20} data-oid="xa8.6l_" />,
+            icon: <ShoppingBag size={20} data-oid="z9hx9bn" />,
             href: '/extensions',
         },
     ];
@@ -66,17 +66,17 @@ export default function Sidebar() {
                 'h-screen transition-all duration-300 flex flex-col',
                 sidebarCollapsed ? 'w-16' : 'w-64',
             )}
-            data-oid="l:i:fsb"
+            data-oid="bjm4s9u"
         >
             <div
                 className="bg-gradient-to-b from-[#B66EE1] to-[#9747FF] h-full flex flex-col text-white"
-                data-oid="9v-hifi"
+                data-oid="ye4yh-w"
             >
-                <div className="p-4 flex items-center justify-between" data-oid="swybrii">
+                <div className="p-4 flex items-center justify-between" data-oid="_m_l7.b">
                     {!sidebarCollapsed && (
                         <h1
                             className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 flex items-center"
-                            data-oid="oi0_d3v"
+                            data-oid="96lvoft"
                         >
                             <svg
                                 width="24"
@@ -85,14 +85,14 @@ export default function Sidebar() {
                                 fill="none"
                                 xmlns="http://www.w3.org/2000/svg"
                                 className="mr-2"
-                                data-oid="vu_w11-"
+                                data-oid=":3p1sh7"
                             >
                                 <path
                                     d="M12 2L2 7L12 12L22 7L12 2Z"
                                     fill="url(#paint0_linear)"
                                     stroke="white"
                                     strokeWidth="1.5"
-                                    data-oid="ub_5n:0"
+                                    data-oid="ntkp84s"
                                 />
 
                                 <path
@@ -100,7 +100,7 @@ export default function Sidebar() {
                                     stroke="white"
                                     strokeWidth="1.5"
                                     strokeLinecap="round"
-                                    data-oid="s02v7wi"
+                                    data-oid="mjfuea0"
                                 />
 
                                 <path
@@ -108,10 +108,10 @@ export default function Sidebar() {
                                     stroke="white"
                                     strokeWidth="1.5"
                                     strokeLinecap="round"
-                                    data-oid="5wmixdp"
+                                    data-oid="goid3ly"
                                 />
 
-                                <defs data-oid="urae8c6">
+                                <defs data-oid="du_8i3w">
                                     <linearGradient
                                         id="paint0_linear"
                                         x1="2"
@@ -119,10 +119,10 @@ export default function Sidebar() {
                                         x2="22"
                                         y2="7"
                                         gradientUnits="userSpaceOnUse"
-                                        data-oid="y42z7m1"
+                                        data-oid="9ilejfu"
                                     >
-                                        <stop stopColor="#FFFFFF" data-oid="gfgx0ev" />
-                                        <stop offset="1" stopColor="#E9D5FF" data-oid="agi_rze" />
+                                        <stop stopColor="#FFFFFF" data-oid="_0o9d_y" />
+                                        <stop offset="1" stopColor="#E9D5FF" data-oid="k9-140b" />
                                     </linearGradient>
                                 </defs>
                             </svg>
@@ -132,33 +132,33 @@ export default function Sidebar() {
                     <button
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                         className="p-1 rounded-full hover:bg-purple-700"
-                        data-oid="mpgu48_"
+                        data-oid="2pnv3c-"
                     >
                         {sidebarCollapsed ? (
-                            <ChevronRight size={20} data-oid="gu-a:b9" />
+                            <ChevronRight size={20} data-oid="utxif8f" />
                         ) : (
-                            <ChevronLeft size={20} data-oid="h81jp2c" />
+                            <ChevronLeft size={20} data-oid="ihb5yls" />
                         )}
                     </button>
                 </div>
 
-                <nav className="flex-1 mt-6" data-oid="ogzj-6.">
-                    <ul className="space-y-2 px-2" data-oid="3qy7q1_">
+                <nav className="flex-1 mt-6" data-oid="8jdffb6">
+                    <ul className="space-y-2 px-2" data-oid="t3f8gko">
                         {menuItems.map((item) => (
-                            <li key={item.name} data-oid="bm3p.5l">
+                            <li key={item.name} data-oid="jmet81w">
                                 <Link
                                     href={item.href}
                                     className={cn(
                                         'flex items-center p-3 rounded-lg hover:bg-purple-700 transition-colors',
                                         pathname === item.href ? 'bg-purple-700' : '',
                                     )}
-                                    data-oid="qu13jv-"
+                                    data-oid="5ph0.:4"
                                 >
-                                    <span className="flex-shrink-0" data-oid="1jj7jfp">
+                                    <span className="flex-shrink-0" data-oid="oi_ahny">
                                         {item.icon}
                                     </span>
                                     {!sidebarCollapsed && (
-                                        <span className="ml-3" data-oid="r3ta3fm">
+                                        <span className="ml-3" data-oid="6wb2r1.">
                                             {item.name}
                                         </span>
                                     )}

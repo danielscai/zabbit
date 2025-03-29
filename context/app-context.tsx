@@ -28,7 +28,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 sidebarCollapsed,
                 setSidebarCollapsed,
             }}
-            data-oid="lmggkh8"
+            data-oid=".dg7a5n"
         >
             {children}
         </AppContext.Provider>

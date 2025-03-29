@@ -113,20 +113,20 @@ export default function TemplatesPage() {
     const [selectedTemplate, setSelectedTemplate] = useState(null);
 
     return (
-        <div className="flex h-screen bg-gray-50 dark:bg-gray-900" data-oid="e.ixi28">
-            <Sidebar data-oid="qp:y1l4" />
+        <div className="flex h-screen bg-gray-50 dark:bg-gray-900" data-oid="-c9k8jz">
+            <Sidebar data-oid="o8ko_km" />
 
-            <div className="flex-1 flex flex-col overflow-hidden" data-oid="8odko:m">
+            <div className="flex-1 flex flex-col overflow-hidden" data-oid="j08idra">
                 <Header
                     title="模板管理"
                     tabs={TABS}
                     activeTab={activeTab}
                     onTabChange={setActiveTab}
-                    data-oid="rd20i4k"
+                    data-oid="vy-v3.j"
                 />
 
-                <main className="flex-1 overflow-y-auto p-6" data-oid="0m195._">
-                    <div className="max-w-7xl mx-auto" data-oid="m.t1wnj">
+                <main className="flex-1 overflow-y-auto p-6" data-oid="3-9e.6d">
+                    <div className="max-w-7xl mx-auto" data-oid="lfxfwx7">
                         {/* <div
               className="border-b border-gray-200 dark:border-gray-700"
               data-oid="ohtlvzk"
@@ -134,14 +134,14 @@ export default function TemplatesPage() {
 
                         <div
                             className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
-                            data-oid="qyfn_ld"
+                            data-oid=":g9i..."
                         >
                             {MOCK_TEMPLATES[activeTab].map((template) => (
                                 <TemplateCard
                                     key={template.id}
                                     {...template}
                                     onClick={() => setSelectedTemplate(template)}
-                                    data-oid="cq4n7pg"
+                                    data-oid="bn1ixi7"
                                 />
                             ))}
                         </div>
@@ -153,7 +153,7 @@ export default function TemplatesPage() {
                 isOpen={!!selectedTemplate}
                 onClose={() => setSelectedTemplate(null)}
                 template={selectedTemplate}
-                data-oid="z46rwhm"
+                data-oid="a5m5ez9"
             />
         </div>
     );
