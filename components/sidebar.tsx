@@ -11,13 +11,13 @@ import {
     Bell,
     Activity,
     Download,
-    BarChart2,
     FileText,
     Database,
     ShoppingBag,
     ChevronLeft,
     ChevronRight,
     Bot,
+    Server,
 } from 'lucide-react';
 
 type MenuItem = {
@@ -48,7 +48,7 @@ export default function Sidebar() {
             icon: <Download size={20} data-oid="95pm69n" />,
             href: '/installation',
         },
-        { name: '业务监控', icon: <BarChart2 size={20} data-oid="wnw:.b." />, href: '/business' },
+        { name: 'Server 管理', icon: <Server size={20} data-oid="server-mgmt" />, href: '/server' },
         { name: '巡检报告', icon: <FileText size={20} data-oid="11166jp" />, href: '/reports' },
         { name: 'CMDB', icon: <Database size={20} data-oid="av4by0o" />, href: '/cmdb' },
         {
