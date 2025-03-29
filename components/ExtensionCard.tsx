@@ -1,7 +1,9 @@
+import { ReactNode } from 'react';
+
 interface ExtensionCardProps {
     title: string;
     description: string;
-    icon: string;
+    icon: ReactNode;
     usedTimes: number;
     onClick: () => void;
 }
@@ -20,7 +22,12 @@ export default function ExtensionCard({
             data-oid="pif:vhs"
         >
             <div className="flex items-start space-x-4" data-oid="4.ty8bc">
-                <img src={icon} alt={title} className="w-12 h-12 rounded" data-oid="9kpt0zx" />
+                <div
+                    className="w-12 h-12 rounded bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center"
+                    data-oid="aefi8ig"
+                >
+                    {icon}
+                </div>
                 <div className="flex-1" data-oid="h44p8_j">
                     <h3
                         className="text-lg font-medium text-gray-900 dark:text-white"

@@ -5,12 +5,13 @@ import Sidebar from '@/components/sidebar';
 import Header from '@/components/header';
 import ExtensionCard from '@/components/ExtensionCard';
 import ExtensionDetailModal from '@/components/ExtensionDetailModal';
+import { Calendar, Bot, Zap, BarChart3, Brain } from 'lucide-react';
 
 interface Extension {
     id: string;
     title: string;
     description: string;
-    icon: string;
+    icon: React.ReactNode;
     usedTimes: number;
     indicators: Array<{
         name: string;
@@ -33,7 +34,7 @@ const MOCK_EXTENSIONS: ExtensionsData = {
             id: 'trading-calendar',
             title: '交易日历',
             description: '智能交易日历管理，支持节假日、工作日自动调整',
-            icon: '/images/trading-calendar.png',
+            icon: <Calendar className="w-6 h-6 text-purple-500" data-oid="n-hjtnu" />,
             usedTimes: 12345,
             indicators: [
                 { name: 'CalendarId', description: '日历ID' },
@@ -44,7 +45,7 @@ const MOCK_EXTENSIONS: ExtensionsData = {
             id: 'auto-inspection',
             title: '自动巡检',
             description: '智能系统巡检，自动生成巡检报告',
-            icon: '/images/auto-inspection.png',
+            icon: <Bot className="w-6 h-6 text-purple-500" data-oid="6543bkc" />,
             usedTimes: 8562,
             indicators: [
                 { name: 'TaskId', description: '任务ID' },
@@ -55,7 +56,7 @@ const MOCK_EXTENSIONS: ExtensionsData = {
             id: 'quick-config',
             title: '快速配置',
             description: '一键配置监控项，快速部署监控方案',
-            icon: '/images/quick-config.png',
+            icon: <Zap className="w-6 h-6 text-purple-500" data-oid="krgglfs" />,
             usedTimes: 15678,
             indicators: [
                 { name: 'TemplateId', description: '模板ID' },
@@ -66,7 +67,7 @@ const MOCK_EXTENSIONS: ExtensionsData = {
             id: 'alert-aggregation',
             title: '报警聚合',
             description: '智能报警聚合分析，减少误报和重复报警',
-            icon: '/images/alert-aggregation.png',
+            icon: <BarChart3 className="w-6 h-6 text-purple-500" data-oid="4a.c5k3" />,
             usedTimes: 23456,
             indicators: [
                 { name: 'GroupId', description: '聚合组ID' },
@@ -77,7 +78,7 @@ const MOCK_EXTENSIONS: ExtensionsData = {
             id: 'ai-integration',
             title: 'AI 集成',
             description: '智能运维分析，预测性维护建议',
-            icon: '/images/ai-integration.png',
+            icon: <Brain className="w-6 h-6 text-purple-500" data-oid="v37kln9" />,
             usedTimes: 7890,
             indicators: [
                 { name: 'ModelId', description: '模型ID' },

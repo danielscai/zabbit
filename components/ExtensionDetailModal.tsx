@@ -1,10 +1,12 @@
+import { ReactNode } from 'react';
+
 interface ExtensionDetailModalProps {
     isOpen: boolean;
     onClose: () => void;
     extension: {
         title: string;
         description: string;
-        icon: string;
+        icon: ReactNode;
         indicators: Array<{
             name: string;
             description: string;
@@ -36,12 +38,12 @@ export default function ExtensionDetailModal({
                         data-oid="llhnp0b"
                     >
                         <div className="flex items-center space-x-3" data-oid="1cvird8">
-                            <img
-                                src={extension.icon}
-                                alt={extension.title}
-                                className="w-10 h-10"
-                                data-oid="ie7_ps9"
-                            />
+                            <div
+                                className="w-10 h-10 rounded bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center"
+                                data-oid="nce2wd3"
+                            >
+                                {extension.icon}
+                            </div>
 
                             <h3
                                 className="text-xl font-semibold text-gray-900 dark:text-white"
