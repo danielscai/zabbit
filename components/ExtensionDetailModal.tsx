@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import ProTag from './ProTag';
 
 interface ExtensionDetailModalProps {
     isOpen: boolean;
@@ -7,6 +8,7 @@ interface ExtensionDetailModalProps {
         title: string;
         description: string;
         icon: ReactNode;
+        isPro?: boolean;
         indicators: Array<{
             name: string;
             description: string;
@@ -45,12 +47,20 @@ export default function ExtensionDetailModal({
                                 {extension.icon}
                             </div>
 
-                            <h3
-                                className="text-xl font-semibold text-gray-900 dark:text-white"
-                                data-oid="bimxp-f"
-                            >
-                                {extension.title}
-                            </h3>
+                            <div className="flex items-center space-x-2" data-oid="z0h2x1i">
+                                <h3
+                                    className="text-xl font-semibold text-gray-900 dark:text-white"
+                                    data-oid="bimxp-f"
+                                >
+                                    {extension.title}
+                                </h3>
+                                {extension.isPro && (
+                                    <ProTag
+                                        className="!static !transform-none"
+                                        data-oid="apac1k1"
+                                    />
+                                )}
+                            </div>
                         </div>
                         <button
                             onClick={onClose}

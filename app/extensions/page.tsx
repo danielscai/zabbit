@@ -6,6 +6,7 @@ import Header from '@/components/header';
 import ExtensionCard from '@/components/ExtensionCard';
 import ExtensionDetailModal from '@/components/ExtensionDetailModal';
 import { Calendar, Bot, Zap, BarChart3, Brain } from 'lucide-react';
+import ProTag from '@/components/ProTag';
 
 interface Extension {
     id: string;
@@ -13,6 +14,7 @@ interface Extension {
     description: string;
     icon: React.ReactNode;
     usedTimes: number;
+    isPro: boolean;
     indicators: Array<{
         name: string;
         description: string;
@@ -36,6 +38,7 @@ const MOCK_EXTENSIONS: ExtensionsData = {
             description: '智能交易日历管理，支持节假日、工作日自动调整',
             icon: <Calendar className="w-6 h-6 text-purple-500" data-oid="orsgq53" />,
             usedTimes: 12345,
+            isPro: true,
             indicators: [
                 { name: 'CalendarId', description: '日历ID' },
                 { name: 'Region', description: '地区' },
@@ -47,6 +50,7 @@ const MOCK_EXTENSIONS: ExtensionsData = {
             description: '智能系统巡检，自动生成巡检报告',
             icon: <Bot className="w-6 h-6 text-purple-500" data-oid="6tln:ig" />,
             usedTimes: 8562,
+            isPro: false,
             indicators: [
                 { name: 'TaskId', description: '任务ID' },
                 { name: 'Schedule', description: '巡检计划' },
@@ -58,6 +62,7 @@ const MOCK_EXTENSIONS: ExtensionsData = {
             description: '一键配置监控项，快速部署监控方案',
             icon: <Zap className="w-6 h-6 text-purple-500" data-oid="2sf0002" />,
             usedTimes: 15678,
+            isPro: false,
             indicators: [
                 { name: 'TemplateId', description: '模板ID' },
                 { name: 'Target', description: '目标系统' },
@@ -69,6 +74,7 @@ const MOCK_EXTENSIONS: ExtensionsData = {
             description: '智能报警聚合分析，减少误报和重复报警',
             icon: <BarChart3 className="w-6 h-6 text-purple-500" data-oid="dksi:e2" />,
             usedTimes: 23456,
+            isPro: true,
             indicators: [
                 { name: 'GroupId', description: '聚合组ID' },
                 { name: 'Rules', description: '聚合规则' },
@@ -80,6 +86,7 @@ const MOCK_EXTENSIONS: ExtensionsData = {
             description: '智能运维分析，预测性维护建议',
             icon: <Brain className="w-6 h-6 text-purple-500" data-oid="9jd_eim" />,
             usedTimes: 7890,
+            isPro: true,
             indicators: [
                 { name: 'ModelId', description: '模型ID' },
                 { name: 'AnalysisType', description: '分析类型' },

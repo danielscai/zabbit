@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import ProTag from '@/components/ProTag';
 
 const ServerInstall = () => {
     return (
@@ -49,15 +50,12 @@ const ServerInstall = () => {
                 data-oid="a7.xm8l"
             >
                 <div className="flex-1" data-oid="vpp72ih">
-                    <div
-                        className="absolute -top-2 -right-2 bg-[#2C1810] text-[#FFD700] px-3 py-1 rounded-full text-sm font-semibold shadow-lg border border-[#463229] transform rotate-12"
-                        data-oid="dz93xti"
-                    >
-                        PRO
+                    <div className="flex items-center justify-between mb-4" data-oid="tif-x98">
+                        <h2 className="text-xl font-semibold" data-oid="7x09ft1">
+                            集群模式
+                        </h2>
+                        <ProTag variant="right" data-oid="g0b25uc" />
                     </div>
-                    <h2 className="text-xl font-semibold mb-4" data-oid="7x09ft1">
-                        集群模式
-                    </h2>
                     <div className="mb-4" data-oid="lb_zrj3">
                         <p className="text-gray-600 dark:text-gray-300" data-oid="omwmnbx">
                             集群模式提供高可用性，支持水平扩展...
@@ -90,15 +88,12 @@ const ServerInstall = () => {
                 data-oid="9b-xbta"
             >
                 <div className="flex-1" data-oid="5qam.-a">
-                    <div
-                        className="absolute -top-2 -right-2 bg-[#2C1810] text-[#FFD700] px-3 py-1 rounded-full text-sm font-semibold shadow-lg border border-[#463229] transform rotate-12"
-                        data-oid="od2jhcm"
-                    >
-                        PRO
+                    <div className="flex items-center justify-between mb-4" data-oid="9zifdrk">
+                        <h2 className="text-xl font-semibold" data-oid="kc5suoq">
+                            分布式集群
+                        </h2>
+                        <ProTag variant="right" data-oid="9t3k_xn" />
                     </div>
-                    <h2 className="text-xl font-semibold mb-4" data-oid="kc5suoq">
-                        分布式集群
-                    </h2>
                     <div className="mb-4" data-oid="bak1l_4">
                         <p className="text-gray-600 dark:text-gray-300" data-oid="inmkc_2">
                             分布式集群架构，支持跨区域部署和负载均衡...
