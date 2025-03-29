@@ -17,6 +17,7 @@ import {
     ShoppingBag,
     ChevronLeft,
     ChevronRight,
+    Bot,
 } from 'lucide-react';
 
 type MenuItem = {
@@ -30,6 +31,11 @@ export default function Sidebar() {
     const pathname = usePathname();
 
     const menuItems: MenuItem[] = [
+        {
+            name: 'AI',
+            icon: <Bot size={20} data-oid="ai-assistant" />,
+            href: '/ai',
+        },
         {
             name: '模板管理',
             icon: <LayoutTemplate size={20} data-oid="zhpinla" />,
