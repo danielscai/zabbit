@@ -137,10 +137,10 @@ export default function AlertProcessingTab() {
                         className="text-lg font-medium text-gray-900 dark:text-white mb-2"
                         data-oid="intro-title"
                     >
-                        告警处理能力
+                        告警文本处理
                     </h3>
                     <p className="text-gray-600 dark:text-gray-300" data-oid="intro-description">
-                        告警处理能力模块允许您对接收到的告警进行二次处理，包括格式化、分类、丰富化等操作。您还可以集成AI能力，对告警进行智能处理，提高告警的可读性和有效性。
+                        告警文本处理模块允许您对接收到的告警进行二次处理，包括格式化、分类、丰富化等操作。您还可以集成AI能力，对告警进行智能处理，提高告警的可读性和有效性。
                     </p>
                 </div>
             </div>

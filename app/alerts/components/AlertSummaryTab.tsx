@@ -136,7 +136,7 @@ export default function AlertSummaryTab() {
                         告警汇总
                     </h3>
                     <p className="text-gray-600 dark:text-gray-300" data-oid="intro-description">
-                        此页面汇总了来自多个 Java
+                        此页面汇总了来自多个 Zabbix
                         应用服务的告警信息，提供统一的视图和管理界面。您可以查看、确认和解决各种告警，并通过过滤器快速定位关注的告警。
                     </p>
                 </div>

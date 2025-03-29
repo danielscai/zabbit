@@ -15,7 +15,7 @@ const TABS = [
     { id: 'alert-center', name: '告警中心' },
     { id: 'alert-noise-reduction', name: '告警降噪' },
     { id: 'alert-channel', name: '告警通道管理' },
-    { id: 'alert-processing', name: '告警处理能力' },
+    { id: 'alert-processing', name: '告警文本处理' },
     { id: 'alert-root-cause', name: '告警归因分析' },
 ];
 
