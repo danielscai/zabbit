@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 interface TemplateDetailModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -36,9 +38,11 @@ export default function TemplateDetailModal({
                         data-oid="3yz9v_i"
                     >
                         <div className="flex items-center space-x-3" data-oid="_yf5g4a">
-                            <img
+                            <Image
                                 src={template.icon}
                                 alt={template.title}
+                                width={40}
+                                height={40}
                                 className="w-10 h-10"
                                 data-oid=".90h4o4"
                             />

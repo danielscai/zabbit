@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 interface TemplateCardProps {
     title: string;
     description: string;
@@ -20,7 +22,7 @@ export default function TemplateCard({
             data-oid="9j6wfj2"
         >
             <div className="flex items-start space-x-4" data-oid="if9xiv3">
-                <img src={icon} alt={title} className="w-12 h-12 rounded" data-oid="5ccfdqr" />
+                <Image src={icon} alt={title} width={48} height={48} className="w-12 h-12 rounded" data-oid="5ccfdqr" />
                 <div className="flex-1" data-oid="zt81.va">
                     <h3
                         className="text-lg font-medium text-gray-900 dark:text-white"

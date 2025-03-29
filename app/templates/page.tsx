@@ -109,8 +109,18 @@ const MOCK_TEMPLATES = {
 };
 
 export default function TemplatesPage() {
-    const [activeTab, setActiveTab] = useState('system');
-    const [selectedTemplate, setSelectedTemplate] = useState(null);
+    const [activeTab, setActiveTab] = useState<'system' | 'custom'>('system');
+    // u5b9au4e49u6a21u677fu7c7bu578b
+type Template = {
+    id: string;
+    title: string;
+    description: string;
+    icon: string;
+    usedTimes: number;
+    indicators: Array<{ name: string; description: string; }>;
+};
+
+const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
 
     return (
         <div className="flex h-screen bg-gray-50 dark:bg-gray-900" data-oid="-c9k8jz">
@@ -121,7 +131,12 @@ export default function TemplatesPage() {
                     title="模板管理"
                     tabs={TABS}
                     activeTab={activeTab}
-                    onTabChange={setActiveTab}
+                    onTabChange={(tabId: string) => {
+                        // u786eu4fddu53eau6709u6709u6548u7684u6807u7b7eu624du4f1au8bbeu7f6e
+                        if (tabId === 'system' || tabId === 'custom') {
+                            setActiveTab(tabId);
+                        }
+                    }}
                     data-oid="vy-v3.j"
                 />
 
@@ -136,7 +151,7 @@ export default function TemplatesPage() {
                             className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
                             data-oid=":g9i..."
                         >
-                            {MOCK_TEMPLATES[activeTab].map((template) => (
+                            {MOCK_TEMPLATES[activeTab as keyof typeof MOCK_TEMPLATES].map((template) => (
                                 <TemplateCard
                                     key={template.id}
                                     {...template}
@@ -149,12 +164,14 @@ export default function TemplatesPage() {
                 </main>
             </div>
 
-            <TemplateDetailModal
-                isOpen={!!selectedTemplate}
-                onClose={() => setSelectedTemplate(null)}
-                template={selectedTemplate}
-                data-oid="a5m5ez9"
-            />
+            {selectedTemplate && (
+                <TemplateDetailModal
+                    isOpen={true}
+                    onClose={() => setSelectedTemplate(null)}
+                    template={selectedTemplate}
+                    data-oid="a5m5ez9"
+                />
+            )}
         </div>
     );
 }

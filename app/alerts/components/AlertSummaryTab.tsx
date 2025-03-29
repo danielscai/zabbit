@@ -74,7 +74,7 @@ export default function AlertSummaryTab() {
     });
 
     // Get unique sources for filter dropdown
-    const sources = [...new Set(alerts.map((alert) => alert.source))];
+    const sources = Array.from(new Set(alerts.map((alert) => alert.source)));
 
     // Handle alert actions
     const handleAcknowledge = (alertId: string) => {

@@ -219,13 +219,11 @@ export default function AIPage() {
                                                                                     className="relative h-48 w-full"
                                                                                     data-oid="ew75ecr"
                                                                                 >
-                                                                                    <img
-                                                                                        src={
-                                                                                            image.url
-                                                                                        }
-                                                                                        alt={
-                                                                                            image.alt
-                                                                                        }
+                                                                                    <Image
+                                                                                        src={image.url}
+                                                                                        alt={image.alt}
+                                                                                        width={500}
+                                                                                        height={300}
                                                                                         className="w-full h-full object-cover"
                                                                                         data-oid="o-i60ef"
                                                                                     />

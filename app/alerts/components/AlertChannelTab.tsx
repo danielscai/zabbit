@@ -529,7 +529,7 @@ export default function AlertChannelTab() {
                                 className="text-sm text-gray-600 dark:text-gray-400"
                                 data-oid="g7nygpe"
                             >
-                                需要配置企业ID、应用ID、应用Secret和接收人。接收人可以是指定成员（如"zhangsan"）、部门（如"@all"）或标签（如"TagName"）。
+                                需要配置企业ID、应用ID、应用Secret和接收人。接收人可以是指定成员（如&quot;zhangsan&quot;）、部门（如&quot;@all&quot;）或标签（如&quot;TagName&quot;）。
                             </p>
                         </div>
                         <div data-oid="2pkt5qc">
