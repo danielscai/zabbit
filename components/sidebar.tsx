@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '@/context/app-context';
 
@@ -29,13 +28,6 @@ type MenuItem = {
 export default function Sidebar() {
     const { sidebarCollapsed, setSidebarCollapsed } = useAppContext();
     const pathname = usePathname();
-
-    // Collapse sidebar when navigating to templates page
-    useEffect(() => {
-        if (pathname === '/templates') {
-            setSidebarCollapsed(true);
-        }
-    }, [pathname, setSidebarCollapsed]);
 
     const menuItems: MenuItem[] = [
         {
