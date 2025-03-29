@@ -17,7 +17,7 @@ const MOCK_TEMPLATES = {
             id: '1',
             title: '阿里云站点监控',
             description: '监控网站可用性和性能指标',
-            icon: '/icons/aliyun-monitor.png',
+            icon: '/images/aliyun-icon.png',
             usedTimes: 48156,
             indicators: [
                 { name: 'Address', description: '站点地址' },
@@ -37,38 +37,24 @@ export default function TemplatesPage() {
     const [selectedTemplate, setSelectedTemplate] = useState(null);
 
     return (
-        <div className="flex h-screen bg-gray-50 dark:bg-gray-900" data-oid="ie2o_rf">
-            <Sidebar data-oid=".lyxf-z" />
+        <div className="flex h-screen bg-gray-50 dark:bg-gray-900" data-oid="e.ixi28">
+            <Sidebar data-oid="qp:y1l4" />
 
-            <div className="flex-1 flex flex-col overflow-hidden" data-oid="5.qx:m-">
-                <Header data-oid="7xvhb77" />
+            <div className="flex-1 flex flex-col overflow-hidden" data-oid="8odko:m">
+                <Header
+                    title="模板管理"
+                    tabs={TABS}
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    data-oid="rd20i4k"
+                />
 
-                <main className="flex-1 overflow-y-auto p-6" data-oid="v7v8ib-">
+                <main className="flex-1 overflow-y-auto p-6" data-oid="0m195._">
                     <div className="max-w-7xl mx-auto" data-oid="m.t1wnj">
-                        <div
-                            className="border-b border-gray-200 dark:border-gray-700"
-                            data-oid="ohtlvzk"
-                        >
-                            <nav className="-mb-px flex space-x-8" data-oid="sky.y6d">
-                                {TABS.map((tab) => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setActiveTab(tab.id)}
-                                        className={`
-                      py-4 px-1 border-b-2 font-medium text-sm
-                      ${
-                          activeTab === tab.id
-                              ? 'border-purple-500 text-purple-600'
-                              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }
-                    `}
-                                        data-oid="7cta6n."
-                                    >
-                                        {tab.name}
-                                    </button>
-                                ))}
-                            </nav>
-                        </div>
+                        {/* <div
+              className="border-b border-gray-200 dark:border-gray-700"
+              data-oid="ohtlvzk"
+              ></div> */}
 
                         <div
                             className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"

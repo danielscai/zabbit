@@ -19,7 +19,7 @@ export default function Page() {
             <Sidebar data-oid="ols1xys" />
 
             <div className="flex-1 flex flex-col overflow-hidden" data-oid="xzoi970">
-                <Header data-oid="kt.cvlj" />
+                <Header title="Zabbit 管理平台" data-oid="kt.cvlj" />
 
                 <main className="flex-1 overflow-y-auto p-6" data-oid="nqp1k4f">
                     <div className="max-w-7xl mx-auto" data-oid="n3procq">
