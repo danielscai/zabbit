@@ -50,7 +50,7 @@ export default function Sidebar() {
         },
         { name: 'Server 管理', icon: <Server size={20} data-oid="server-mgmt" />, href: '/server' },
         { name: '巡检报告', icon: <FileText size={20} data-oid="11166jp" />, href: '/reports' },
-        { name: 'CMDB', icon: <Database size={20} data-oid="av4by0o" />, href: '/cmdb' },
+        { name: '集成', icon: <Database size={20} data-oid="av4by0o" />, href: '/integration' },
         {
             name: '扩展商店',
             icon: <ShoppingBag size={20} data-oid="z9hx9bn" />,
