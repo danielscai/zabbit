@@ -27,15 +27,15 @@ export default function Header() {
 
     return (
         <header
-            className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 h-16 flex items-center px-6"
+            className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center p-0 px-[24px] py-0 h-24"
             data-oid="r2354wz"
         >
             <div className="flex-1" data-oid="ptq4pm7">
                 <h1
-                    className="text-xl font-semibold text-gray-800 dark:text-white"
+                    className="text-gray-800 dark:text-white text-[30px] font-semibold"
                     data-oid="2m9ig07"
                 >
-                    Zabbit 管理平台
+                    模板管理
                 </h1>
             </div>
 

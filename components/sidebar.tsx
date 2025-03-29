@@ -69,12 +69,63 @@ export default function Sidebar() {
             data-oid="l:i:fsb"
         >
             <div
-                className="bg-gradient-to-b from-purple-600 to-purple-800 h-full flex flex-col text-white"
+                className="bg-gradient-to-b from-[#B66EE1] to-[#9747FF] h-full flex flex-col text-white"
                 data-oid="9v-hifi"
             >
                 <div className="p-4 flex items-center justify-between" data-oid="swybrii">
                     {!sidebarCollapsed && (
-                        <h1 className="text-xl font-bold" data-oid="oi0_d3v">
+                        <h1
+                            className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200 flex items-center"
+                            data-oid="oi0_d3v"
+                        >
+                            <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="mr-2"
+                                data-oid="vu_w11-"
+                            >
+                                <path
+                                    d="M12 2L2 7L12 12L22 7L12 2Z"
+                                    fill="url(#paint0_linear)"
+                                    stroke="white"
+                                    strokeWidth="1.5"
+                                    data-oid="ub_5n:0"
+                                />
+
+                                <path
+                                    d="M2 17L12 22L22 17"
+                                    stroke="white"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    data-oid="s02v7wi"
+                                />
+
+                                <path
+                                    d="M2 12L12 17L22 12"
+                                    stroke="white"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    data-oid="5wmixdp"
+                                />
+
+                                <defs data-oid="urae8c6">
+                                    <linearGradient
+                                        id="paint0_linear"
+                                        x1="2"
+                                        y1="7"
+                                        x2="22"
+                                        y2="7"
+                                        gradientUnits="userSpaceOnUse"
+                                        data-oid="y42z7m1"
+                                    >
+                                        <stop stopColor="#FFFFFF" data-oid="gfgx0ev" />
+                                        <stop offset="1" stopColor="#E9D5FF" data-oid="agi_rze" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
                             Zabbit
                         </h1>
                     )}
