@@ -250,98 +250,129 @@ export default function AIPage() {
                                 </div>
                             ) : (
                                 <div
-                                    className="mb-10 text-gray-700 dark:text-gray-300 text-center"
+                                    className="flex flex-col items-center justify-center py-6 text-gray-700 dark:text-gray-300 text-center"
                                     data-oid="intro-text"
                                 >
-                                    <h2 className="text-3xl font-bold mb-4" data-oid="6e1_-hw">
+                                    <h2 className="text-2xl font-bold mb-6" data-oid="6e1_-hw">
                                         你好，我是超级AI。准备好了吗？我们可以随时开始。
                                     </h2>
+
+                                    {showExamples && (
+                                        <div
+                                            className="space-y-6 w-full max-w-3xl"
+                                            data-oid="xv1yilx"
+                                        >
+                                            <h2
+                                                className="text-lg font-semibold text-gray-900 dark:text-white"
+                                                data-oid="4t7kr-e"
+                                            >
+                                                你可以这样问我
+                                            </h2>
+                                            <div
+                                                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                                data-oid="a9ivcr9"
+                                            >
+                                                {examples.map((example, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-500 dark:hover:border-purple-500 cursor-pointer transition-colors"
+                                                        onClick={() => {
+                                                            setQuery(example.description);
+                                                            setTimeout(() => handleSubmit(), 100);
+                                                        }}
+                                                        data-oid="6gx6gx9"
+                                                    >
+                                                        <h3
+                                                            className="font-medium text-gray-900 dark:text-white mb-2"
+                                                            data-oid="ywhmo3m"
+                                                        >
+                                                            {example.title}
+                                                        </h3>
+                                                        <p
+                                                            className="text-gray-600 dark:text-gray-300 text-sm"
+                                                            data-oid="8d.q4pt"
+                                                        >
+                                                            {example.description}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* 输入区域 - 在无消息时显示在中央 */}
+                                    <div className="w-full max-w-3xl mt-8" data-oid="wdlgmhe">
+                                        <div className="relative" data-oid="61xytz2">
+                                            <input
+                                                type="text"
+                                                value={query}
+                                                onChange={(e) => setQuery(e.target.value)}
+                                                onKeyDown={handleKeyDown}
+                                                placeholder="输入任何问题，我来帮你解答..."
+                                                className="w-full p-4 pr-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                                data-oid="o_cvf_k"
+                                            />
+
+                                            <div
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-2"
+                                                data-oid="jv5am3u"
+                                            >
+                                                <button
+                                                    className="p-2 text-gray-400 hover:text-purple-500"
+                                                    data-oid=":zkifsu"
+                                                >
+                                                    <Mic size={20} data-oid="4flj.4y" />
+                                                </button>
+                                                <button
+                                                    className="p-2 text-gray-400 hover:text-purple-500"
+                                                    onClick={handleSubmit}
+                                                    data-oid="761l9x3"
+                                                >
+                                                    <Send size={20} data-oid="2jbu1e6" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* 输入区域 - 固定在底部 */}
-                    <div
-                        className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-                        data-oid="66rmiow"
-                    >
-                        <div className="max-w-4xl mx-auto" data-oid="tjviirm">
-                            <div className="relative" data-oid="w-52jxu">
-                                <input
-                                    type="text"
-                                    value={query}
-                                    onChange={(e) => setQuery(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    placeholder="输入任何问题，我来帮你解答..."
-                                    className="w-full p-4 pr-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                    data-oid="o_cvf_k"
-                                />
-
-                                <div
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-2"
-                                    data-oid="c6o97eg"
-                                >
-                                    <button
-                                        className="p-2 text-gray-400 hover:text-purple-500"
-                                        data-oid="dxw.aan"
-                                    >
-                                        <Mic size={20} data-oid="v3.91a8" />
-                                    </button>
-                                    <button
-                                        className="p-2 text-gray-400 hover:text-purple-500"
-                                        onClick={handleSubmit}
-                                        data-oid="8xe2:41"
-                                    >
-                                        <Send size={20} data-oid=".hj0t:0" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 示例问题区域 - 仅在没有消息时显示 */}
-                    {showExamples && (
+                    {/* 输入区域 - 当有消息时固定在底部 */}
+                    {messages.length > 0 && (
                         <div
-                            className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700"
-                            data-oid="examples-container"
+                            className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                            data-oid="66rmiow"
                         >
-                            <div className="max-w-4xl mx-auto" data-oid="n_3avi:">
-                                <div className="space-y-6" data-oid="xv1yilx">
-                                    <h2
-                                        className="text-lg font-semibold text-gray-900 dark:text-white"
-                                        data-oid="4t7kr-e"
-                                    >
-                                        你可以这样问我
-                                    </h2>
+                            <div className="max-w-4xl mx-auto" data-oid="tjviirm">
+                                <div className="relative" data-oid="w-52jxu">
+                                    <input
+                                        type="text"
+                                        value={query}
+                                        onChange={(e) => setQuery(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        placeholder="输入任何问题，我来帮你解答..."
+                                        className="w-full p-4 pr-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        data-oid="8h-1.5w"
+                                    />
+
                                     <div
-                                        className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                                        data-oid="a9ivcr9"
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-2"
+                                        data-oid="c6o97eg"
                                     >
-                                        {examples.map((example, index) => (
-                                            <div
-                                                key={index}
-                                                className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-500 dark:hover:border-purple-500 cursor-pointer transition-colors"
-                                                onClick={() => {
-                                                    setQuery(example.description);
-                                                    setTimeout(() => handleSubmit(), 100);
-                                                }}
-                                                data-oid="6gx6gx9"
-                                            >
-                                                <h3
-                                                    className="font-medium text-gray-900 dark:text-white mb-2"
-                                                    data-oid="ywhmo3m"
-                                                >
-                                                    {example.title}
-                                                </h3>
-                                                <p
-                                                    className="text-gray-600 dark:text-gray-300 text-sm"
-                                                    data-oid="8d.q4pt"
-                                                >
-                                                    {example.description}
-                                                </p>
-                                            </div>
-                                        ))}
+                                        <button
+                                            className="p-2 text-gray-400 hover:text-purple-500"
+                                            data-oid="dxw.aan"
+                                        >
+                                            <Mic size={20} data-oid="v3.91a8" />
+                                        </button>
+                                        <button
+                                            className="p-2 text-gray-400 hover:text-purple-500"
+                                            onClick={handleSubmit}
+                                            data-oid="8xe2:41"
+                                        >
+                                            <Send size={20} data-oid=".hj0t:0" />
+                                        </button>
                                     </div>
                                 </div>
                             </div>
