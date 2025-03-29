@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+    <!-- 定义渐变 -->
+    <defs>
+        <!-- Zabbix Server 渐变 -->
+        <linearGradient id="serverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#FF9A9E"/>
+            <stop offset="100%" style="stop-color:#FAD0C4"/>
+        </linearGradient>
+        <!-- 数据库渐变 -->
+        <linearGradient id="dbGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#A1C4FD"/>
+            <stop offset="100%" style="stop-color:#C2E9FB"/>
+        </linearGradient>
+        <!-- Agent 渐变 -->
+        <linearGradient id="agentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#84FAB0"/>
+            <stop offset="100%" style="stop-color:#8FD3F4"/>
+        </linearGradient>
+        
+        <!-- 动画线条 -->
+        <style type="text/css">
+            .connection-line {
+                stroke-dasharray: 10;
+                animation: dash 1.5s linear infinite;
+            }
+            @keyframes dash {
+                to {
+                    stroke-dashoffset: -20;
+                }
+            }
+        </style>
+    </defs>
+
+    <!-- 背景 -->
+    <rect width="400" height="300" fill="#ffffff" rx="15"/>
+    
+    <!-- Zabbix Server -->
+    <g transform="translate(160,120)">
+        <rect x="0" y="0" width="80" height="100" fill="url(#serverGradient)" rx="10" filter="url(#shadow)"/>
+        <!-- Zabbix Logo简化版 -->
+        <text x="40" y="45" text-anchor="middle" fill="#444" font-family="Arial, sans-serif" font-weight="bold">Z</text>
+        <text x="40" y="140" text-anchor="middle" fill="#444" font-family="Arial, sans-serif" font-size="14">
+            Zabbix Server
+        </text>
+    </g>
+
+    <!-- 数据库 -->
+    <g transform="translate(280,120)">
+        <path d="M0,20 
+                 a40,10 0 1,0 80,0
+                 a40,10 0 1,0 -80,0
+                 v60
+                 a40,10 0 1,0 80,0
+                 v-60" 
+              fill="url(#dbGradient)" filter="url(#shadow)"/>
+        <text x="40" y="140" text-anchor="middle" fill="#444" font-family="Arial, sans-serif" font-size="14">
+            Database
+        </text>
+    </g>
+
+    <!-- Agents -->
+    <g transform="translate(40,80)">
+        <rect width="60" height="40" fill="url(#agentGradient)" rx="8" filter="url(#shadow)"/>
+        <text x="30" y="60" text-anchor="middle" fill="#444" font-size="12">Agent 1</text>
+    </g>
+    
+    <g transform="translate(20,150)">
+        <rect width="60" height="40" fill="url(#agentGradient)" rx="8" filter="url(#shadow)"/>
+        <text x="30" y="60" text-anchor="middle" fill="#444" font-size="12">Agent 2</text>
+    </g>
+    
+    <g transform="translate(40,220)">
+        <rect width="60" height="40" fill="url(#agentGradient)" rx="8" filter="url(#shadow)"/>
+        <text x="30" y="60" text-anchor="middle" fill="#444" font-size="12">Agent 3</text>
+    </g>
+
+    <!-- 连接线 -->
+    <line class="connection-line" x1="240" y1="170" x2="280" y2="170" 
+          stroke="#A1C4FD" stroke-width="2"/>
+          
+    <!-- Agent 连接线 - 更新为曲线 -->
+    <path class="connection-line" 
+          d="M100 100 C120 100, 140 170, 160 170" 
+          stroke="#84FAB0" stroke-width="2" fill="none"/>
+    <path class="connection-line" 
+          d="M80 170 C100 170, 140 170, 160 170" 
+          stroke="#84FAB0" stroke-width="2" fill="none"/>
+    <path class="connection-line" 
+          d="M100 240 C120 240, 140 170, 160 170" 
+          stroke="#84FAB0" stroke-width="2" fill="none"/>
+
+    <!-- 阴影效果 -->
+    <defs>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="shadow"/>
+            <feOffset dx="2" dy="2"/>
+            <feComposite in="SourceGraphic"/>
+        </filter>
+    </defs>
+</svg> 

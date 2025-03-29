@@ -14,15 +14,91 @@ const TABS = [
 const MOCK_TEMPLATES = {
     system: [
         {
-            id: '1',
-            title: '阿里云站点监控',
-            description: '监控网站可用性和性能指标',
-            icon: '/images/aliyun-icon.png',
-            usedTimes: 48156,
+            id: 'rocketmq5',
+            title: '阿里云 RocketMQ5',
+            description: 'Apache RocketMQ 消息队列服务监控',
+            icon: '/images/aliyun-rocketmq.png',
+            usedTimes: 12345,
             indicators: [
-                { name: 'Address', description: '站点地址' },
-                { name: 'TaskName', description: '探测任务名称' },
-                // ... 其他指标
+                { name: 'QueueId', description: '队列ID' },
+                { name: 'Topic', description: '主题名称' },
+            ],
+        },
+        {
+            id: 'aliyun-sae',
+            title: '阿里云 SAE',
+            description: '阿里云 Serverless 应用引擎监控',
+            icon: '/images/aliyun-sae.png',
+            usedTimes: 8562,
+            indicators: [
+                { name: 'AppId', description: '应用ID' },
+                { name: 'Region', description: '地域' },
+            ],
+        },
+        {
+            id: 'aliyun-slb',
+            title: '阿里云 SLB',
+            description: '负载均衡服务监控',
+            icon: '/images/aliyun-slb.png',
+            usedTimes: 15678,
+            indicators: [
+                { name: 'LoadBalancerId', description: '负载均衡实例ID' },
+                { name: 'Port', description: '端口' },
+            ],
+        },
+        {
+            id: 'elasticsearch',
+            title: 'ElasticSearch',
+            description: '分布式搜索和分析引擎监控',
+            icon: '/images/elasticsearch.png',
+            usedTimes: 23456,
+            indicators: [
+                { name: 'ClusterName', description: '集群名称' },
+                { name: 'NodeName', description: '节点名称' },
+            ],
+        },
+        {
+            id: 'emqx',
+            title: 'EMQX',
+            description: '开源 MQTT 消息服务器监控',
+            icon: '/images/emqx.png',
+            usedTimes: 7890,
+            indicators: [
+                { name: 'NodeName', description: '节点名称' },
+                { name: 'Topic', description: '主题' },
+            ],
+        },
+        {
+            id: 'etcd',
+            title: 'etcd',
+            description: '分布式键值存储系统监控',
+            icon: '/images/etcd.png',
+            usedTimes: 9876,
+            indicators: [
+                { name: 'Endpoint', description: '终端节点' },
+                { name: 'ClusterId', description: '集群ID' },
+            ],
+        },
+        {
+            id: 'Dameng',
+            title: '达梦数据库',
+            description: '达梦数据库（DM8）',
+            icon: '/images/Dameng.png',
+            usedTimes: 34567,
+            indicators: [
+                { name: 'DashboardId', description: '仪表盘ID' },
+                { name: 'PanelId', description: '面板ID' },
+            ],
+        },
+        {
+            id: 'hadoop',
+            title: 'Hadoop HDFS',
+            description: '分布式文件系统监控',
+            icon: '/images/hadoop.png',
+            usedTimes: 6789,
+            indicators: [
+                { name: 'NameNode', description: '名称节点' },
+                { name: 'DataNode', description: '数据节点' },
             ],
         },
         // ... 其他系统模板
