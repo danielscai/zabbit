@@ -32,12 +32,8 @@ const getInitialSteps = (mode: 'single' | 'cluster' | 'distributed'): InstallSte
   },
   {
     id: 'deploy-services',
-    title: mode === 'single' ? '部署服务' : mode === 'cluster' ? '部署集群服务' : '部署分布式服务',
-    description: mode === 'single' 
-      ? '启动并配置所有服务'
-      : mode === 'cluster'
-      ? '配置集群节点并启动服务'
-      : '配置分布式节点并启动服务',
+    title: mode === 'single' ? '部署 Zabbix 服务' : mode === 'cluster' ? '部署 Zabbix 集群服务' : '部署 Zabbix 分布式服务',
+    description: '使用 Docker Compose 部署 Zabbix Server 和 PostgreSQL 数据库',
     status: 'pending',
     logs: [],
   }
