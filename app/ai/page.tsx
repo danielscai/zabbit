@@ -5,44 +5,6 @@ import { Send, Mic } from 'lucide-react';
 import Sidebar from '@/components/sidebar';
 import Header from '@/components/header';
 import Image from 'next/image';
-import { h2 } from 'framer-motion/client';
-
-// 模拟的AI回答内容
-const mockResponse = {
-    text: `根据我对昨晚报警数据的分析，系统在23:15至02:30期间共触发了27次报警，主要集中在以下几个方面：
-
-1. **CPU使用率过高** (8次报警)
-   - 主要发生在应用服务器cluster-app-03和cluster-app-05
-   - 峰值达到92.7%，远超75%的警戒阈值
-   - 通过分析进程，发现是每日数据同步任务导致
-
-2. **内存占用异常** (6次报警)
-   - 数据库服务器db-master-01内存使用率突增至95%
-   - 查询日志显示有大量未优化的SQL查询
-
-3. **网络连接超时** (13次报警)
-   - 主要集中在负载均衡器lb-cluster-01
-   - 连接超时主要来自外部API调用
-
-下面是CPU和内存使用率的趋势图，可以看到明显的异常峰值：`,
-    images: [
-        {
-            url: '/images/cpu-usage-graph.png',
-            alt: 'CPU使用率趋势图',
-            caption: '昨晚23:00-03:00 CPU使用率趋势',
-        },
-        {
-            url: '/images/memory-usage-graph.png',
-            alt: '内存使用率趋势图',
-            caption: '昨晚23:00-03:00 内存使用率趋势',
-        },
-        {
-            url: '/images/network-connections.png',
-            alt: '网络连接状态图',
-            caption: '昨晚23:00-03:00 网络连接状态',
-        },
-    ],
-};
 
 // 消息类型定义
 type Message = {
@@ -62,6 +24,7 @@ export default function AIPage() {
     const [displayedText, setDisplayedText] = useState('');
     const [currentCharIndex, setCurrentCharIndex] = useState(0);
     const [showExamples, setShowExamples] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const examples = [
@@ -84,8 +47,8 @@ export default function AIPage() {
     ];
 
     // 处理消息提交
-    const handleSubmit = () => {
-        if (!query.trim()) return;
+    const handleSubmit = async () => {
+        if (!query.trim() || isLoading) return;
 
         // 添加用户消息
         const userMessage: Message = {
@@ -96,29 +59,65 @@ export default function AIPage() {
         setMessages([...messages, userMessage]);
         setQuery('');
         setShowExamples(false);
+        setIsLoading(true);
 
         // 模拟AI开始回复
         setIsTyping(true);
         setDisplayedText('');
         setCurrentCharIndex(0);
 
-        // 延迟一下再添加AI消息，模拟网络延迟
-        setTimeout(() => {
+        try {
+            // 调用AI API
+            const response = await fetch('/api/ai', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // 添加AI消息
             const aiMessage: Message = {
                 role: 'assistant',
-                content: mockResponse.text,
-                images: mockResponse.images,
+                content: data.text,
+                images: data.images,
             };
 
             setMessages((prev) => [...prev, aiMessage]);
-        }, 500);
+        } catch (error) {
+            console.error('Error fetching AI response:', error);
+            
+            // 添加错误消息
+            const errorMessage: Message = {
+                role: 'assistant',
+                content: '抱歉，我在处理您的请求时遇到了问题。请稍后再试。',
+            };
+            
+            setMessages((prev) => [...prev, errorMessage]);
+            setIsTyping(false);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // 处理按键事件
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
             handleSubmit();
         }
+    };
+
+    // 处理示例点击
+    const handleExampleClick = (description: string) => {
+        setQuery(description);
+        setShowExamples(false);
     };
 
     // 模拟打字效果
@@ -200,182 +199,99 @@ export default function AIPage() {
                                                             }}
                                                             data-oid="nz--zw2"
                                                         />
-
-                                                        {/* 图片区域 */}
-                                                        {message.images &&
-                                                            message.images.length > 0 && (
-                                                                <div
-                                                                    className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4"
-                                                                    data-oid="014r9sn"
-                                                                >
-                                                                    {message.images.map(
-                                                                        (image, imgIndex) => (
-                                                                            <div
-                                                                                key={imgIndex}
-                                                                                className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
-                                                                                data-oid="2xhtelh"
-                                                                            >
-                                                                                <div
-                                                                                    className="relative h-48 w-full"
-                                                                                    data-oid="ew75ecr"
-                                                                                >
-                                                                                    <Image
-                                                                                        src={image.url}
-                                                                                        alt={image.alt}
-                                                                                        width={500}
-                                                                                        height={300}
-                                                                                        className="w-full h-full object-cover"
-                                                                                        data-oid="o-i60ef"
-                                                                                    />
-                                                                                </div>
-                                                                                <div
-                                                                                    className="p-2 text-sm text-gray-600 dark:text-gray-400 text-center"
-                                                                                    data-oid="80linqk"
-                                                                                >
-                                                                                    {image.caption}
-                                                                                </div>
-                                                                            </div>
-                                                                        ),
-                                                                    )}
-                                                                </div>
-                                                            )}
+                                                        {message.images && message.images.length > 0 && (
+                                                            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-oid="image-grid">
+                                                                {message.images.map((image, imgIndex) => (
+                                                                    <div key={imgIndex} className="relative" data-oid={`image-${imgIndex}`}>
+                                                                        <Image
+                                                                            src={image.url}
+                                                                            alt={image.alt}
+                                                                            width={300}
+                                                                            height={200}
+                                                                            className="rounded-lg"
+                                                                        />
+                                                                        <p className="text-xs text-gray-500 mt-1">{image.caption}</p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
                                     ))}
-                                    <div ref={messagesEndRef} data-oid="6:zl1qd" />
+                                    <div ref={messagesEndRef} />
                                 </div>
                             ) : (
-                                <div
-                                    className="flex flex-col items-center justify-center py-6 text-gray-700 dark:text-gray-300 text-center"
-                                    data-oid="intro-text"
-                                >
-                                    <h2 className="text-2xl font-bold mb-6" data-oid="6e1_-hw">
-                                        你好，我是超级AI。准备好了吗？我们可以随时开始。
-                                    </h2>
+                                <div className="flex flex-col items-center justify-center h-full py-12" data-oid="empty-state">
+                                    <div className="text-center max-w-md" data-oid="empty-content">
+                                        <h2 className="text-2xl font-bold mb-4">Zabbit 超级AI助手</h2>
+                                        <p className="text-gray-500 dark:text-gray-400 mb-8">
+                                            我可以帮助您分析监控数据、解决告警问题、生成报告，以及更多。
+                                            输入您的问题或选择下面的示例开始对话。
+                                        </p>
 
-                                    {showExamples && (
-                                        <div
-                                            className="space-y-6 w-full max-w-3xl"
-                                            data-oid="xv1yilx"
-                                        >
-                                            <h2
-                                                className="text-lg font-semibold text-gray-900 dark:text-white"
-                                                data-oid="4t7kr-e"
-                                            >
-                                                你可以这样问我
-                                            </h2>
-                                            <div
-                                                className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                                                data-oid="a9ivcr9"
-                                            >
+                                        {showExamples && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6" data-oid="examples-grid">
                                                 {examples.map((example, index) => (
                                                     <div
                                                         key={index}
-                                                        className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-500 dark:hover:border-purple-500 cursor-pointer transition-colors"
-                                                        onClick={() => {
-                                                            setQuery(example.description);
-                                                            setTimeout(() => handleSubmit(), 100);
-                                                        }}
-                                                        data-oid="6gx6gx9"
+                                                        className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                                        onClick={() => handleExampleClick(example.description)}
+                                                        data-oid={`example-${index}`}
                                                     >
-                                                        <h3
-                                                            className="font-medium text-gray-900 dark:text-white mb-2"
-                                                            data-oid="ywhmo3m"
-                                                        >
-                                                            {example.title}
-                                                        </h3>
-                                                        <p
-                                                            className="text-gray-600 dark:text-gray-300 text-sm"
-                                                            data-oid="8d.q4pt"
-                                                        >
+                                                        <h3 className="font-medium mb-1">{example.title}</h3>
+                                                        <p className="text-sm text-gray-500 dark:text-gray-400">
                                                             {example.description}
                                                         </p>
                                                     </div>
                                                 ))}
                                             </div>
-                                        </div>
-                                    )}
-
-                                    {/* 输入区域 - 在无消息时显示在中央 */}
-                                    <div className="w-full max-w-3xl mt-8" data-oid="wdlgmhe">
-                                        <div className="relative" data-oid="61xytz2">
-                                            <input
-                                                type="text"
-                                                value={query}
-                                                onChange={(e) => setQuery(e.target.value)}
-                                                onKeyDown={handleKeyDown}
-                                                placeholder="输入任何问题，我来帮你解答..."
-                                                className="w-full p-4 pr-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                data-oid="o_cvf_k"
-                                            />
-
-                                            <div
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-2"
-                                                data-oid="jv5am3u"
-                                            >
-                                                <button
-                                                    className="p-2 text-gray-400 hover:text-purple-500"
-                                                    data-oid=":zkifsu"
-                                                >
-                                                    <Mic size={20} data-oid="4flj.4y" />
-                                                </button>
-                                                <button
-                                                    className="p-2 text-gray-400 hover:text-purple-500"
-                                                    onClick={handleSubmit}
-                                                    data-oid="761l9x3"
-                                                >
-                                                    <Send size={20} data-oid="2jbu1e6" />
-                                                </button>
-                                            </div>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* 输入区域 - 当有消息时固定在底部 */}
-                    {messages.length > 0 && (
-                        <div
-                            className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-                            data-oid="66rmiow"
-                        >
-                            <div className="max-w-4xl mx-auto" data-oid="tjviirm">
-                                <div className="relative" data-oid="w-52jxu">
-                                    <input
-                                        type="text"
-                                        value={query}
-                                        onChange={(e) => setQuery(e.target.value)}
-                                        onKeyDown={handleKeyDown}
-                                        placeholder="输入任何问题，我来帮你解答..."
-                                        className="w-full p-4 pr-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                        data-oid="8h-1.5w"
-                                    />
-
-                                    <div
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 flex space-x-2"
-                                        data-oid="c6o97eg"
-                                    >
-                                        <button
-                                            className="p-2 text-gray-400 hover:text-purple-500"
-                                            data-oid="dxw.aan"
-                                        >
-                                            <Mic size={20} data-oid="v3.91a8" />
-                                        </button>
-                                        <button
-                                            className="p-2 text-gray-400 hover:text-purple-500"
-                                            onClick={handleSubmit}
-                                            data-oid="8xe2:41"
-                                        >
-                                            <Send size={20} data-oid=".hj0t:0" />
-                                        </button>
-                                    </div>
-                                </div>
+                    {/* 输入区域 */}
+                    <div className="border-t border-gray-200 dark:border-gray-700 p-4" data-oid="input-area">
+                        <div className="max-w-4xl mx-auto flex items-end" data-oid="input-container">
+                            <div className="relative flex-1 mr-2" data-oid="textarea-container">
+                                <textarea
+                                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-white resize-none"
+                                    placeholder="输入您的问题..."
+                                    rows={1}
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    style={{ minHeight: '60px', maxHeight: '200px' }}
+                                    data-oid="query-input"
+                                />
+                                <button
+                                    className="absolute right-3 bottom-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                    onClick={() => {
+                                        /* 实现语音输入功能 */
+                                    }}
+                                    data-oid="mic-button"
+                                >
+                                    <Mic size={20} />
+                                </button>
                             </div>
+                            <button
+                                className={`p-3 rounded-lg ${
+                                    isLoading
+                                        ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
+                                        : 'bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800'
+                                } text-white`}
+                                onClick={handleSubmit}
+                                disabled={isLoading}
+                                data-oid="send-button"
+                            >
+                                <Send size={20} />
+                            </button>
                         </div>
-                    )}
+                    </div>
                 </main>
             </div>
         </div>
