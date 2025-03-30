@@ -3,8 +3,44 @@
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import ProTag from '@/components/ProTag';
+import { useState } from 'react';
+import { toast } from 'react-hot-toast';
+import { ProxyConfig, defaultProxyConfig } from '@/config/proxy';
 
 const ServerInstall = () => {
+    const [isDeploying, setIsDeploying] = useState(false);
+    const [proxyConfig, setProxyConfig] = useState<ProxyConfig>(defaultProxyConfig);
+    const [showProxyConfig, setShowProxyConfig] = useState(false);
+
+    const handleDeploy = async () => {
+        try {
+            setIsDeploying(true);
+            const response = await fetch('/api/deploy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    mode: 'single',
+                    proxyConfig,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || '部署失败');
+            }
+
+            const data = await response.json();
+            toast.success('部署成功！');
+            // 可以在这里添加重定向到监控页面的逻辑
+        } catch (error: any) {
+            toast.error('部署失败：' + error.message);
+        } finally {
+            setIsDeploying(false);
+        }
+    };
+
     return (
         <div className="grid grid-cols-3 gap-6" data-oid="8zioxq5">
             {/* 单机模式 */}
@@ -34,14 +70,65 @@ const ServerInstall = () => {
                         </div>
                     </div>
                 </div>
-                <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 text-white px-4 py-2 rounded-md hover:opacity-90 transition-all duration-200 shadow-lg mt-auto"
-                    data-oid="2y6_d3d"
-                >
-                    开始部署
-                </motion.button>
+                <div className="space-y-4">
+                    <button
+                        onClick={() => setShowProxyConfig(!showProxyConfig)}
+                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                    >
+                        {showProxyConfig ? '隐藏代理配置' : '显示代理配置'}
+                    </button>
+                    
+                    {showProxyConfig && (
+                        <div className="space-y-2">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    HTTP 代理
+                                </label>
+                                <input
+                                    type="text"
+                                    value={proxyConfig.httpProxy}
+                                    onChange={(e) => setProxyConfig({ ...proxyConfig, httpProxy: e.target.value })}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    HTTPS 代理
+                                </label>
+                                <input
+                                    type="text"
+                                    value={proxyConfig.httpsProxy}
+                                    onChange={(e) => setProxyConfig({ ...proxyConfig, httpsProxy: e.target.value })}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    ALL 代理
+                                </label>
+                                <input
+                                    type="text"
+                                    value={proxyConfig.allProxy}
+                                    onChange={(e) => setProxyConfig({ ...proxyConfig, allProxy: e.target.value })}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600"
+                                />
+                            </div>
+                        </div>
+                    )}
+                    
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleDeploy}
+                        disabled={isDeploying}
+                        className={`w-full bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 text-white px-4 py-2 rounded-md hover:opacity-90 transition-all duration-200 shadow-lg ${
+                            isDeploying ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        data-oid="2y6_d3d"
+                    >
+                        {isDeploying ? '部署中...' : '开始部署'}
+                    </motion.button>
+                </div>
             </section>
 
             {/* 集群模式 */}

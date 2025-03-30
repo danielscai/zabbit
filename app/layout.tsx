@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AppProvider } from '@/context/app-context';
+import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <html lang="zh-CN" data-oid="zuv5oiz">
             <body className={inter.className} data-oid="2s:.3-0">
                 <AppProvider data-oid="m6o_xwx">{children}</AppProvider>
+                <Toaster position="top-right" />
             </body>
         </html>
     );

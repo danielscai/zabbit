@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:ubuntu-6.4-latest
+    ports:
+      - "10051:10051"
+    environment:
+      - DB_SERVER_HOST=postgres-server
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix_pwd
+      - POSTGRES_DB=zabbix
+    volumes:
+      - ./zbx_env/usr/lib/zabbix/alertscripts:/usr/lib/zabbix/alertscripts:ro
+      - ./zbx_env/usr/lib/zabbix/externalscripts:/usr/lib/zabbix/externalscripts:ro
+      - ./zbx_env/usr/share/zabbix/modules:/usr/share/zabbix/modules:ro
+      - ./zbx_env/usr/share/zabbix/include:/usr/share/zabbix/include:ro
+    depends_on:
+      - postgres-server
+
+  postgres-server:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix_pwd
+      - POSTGRES_DB=zabbix
+    volumes:
+      - ./zbx_env/var/lib/postgresql/data:/var/lib/postgresql/data
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:ubuntu-6.4-latest
+    ports:
+      - "80:8080"
+    environment:
+      - DB_SERVER_HOST=postgres-server
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix_pwd
+      - POSTGRES_DB=zabbix
+      - ZBX_SERVER_HOST=zabbix-server
+      - PHP_TZ=Asia/Shanghai
+    depends_on:
+      - postgres-server
+      - zabbix-server 

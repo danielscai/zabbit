@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import Sidebar from '@/components/sidebar';
 import Header from '@/components/header';
-import ServerInstall from '@/components/installation/ServerInstall';
-import ProxyInstall from '@/components/installation/ProxyInstall';
-import AgentInstall from '@/components/installation/AgentInstall';
-import SoftwareRepo from '@/components/installation/SoftwareRepo';
+import ServerInstall from './components/ServerInstall';
+import ProxyInstall from './components/ProxyInstall';
+import AgentInstall from './components/AgentInstall';
+import SoftwareRepo from './components/SoftwareRepo';
 
 const TABS = [
     { id: 'server', name: 'Server安装' },
