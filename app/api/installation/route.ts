@@ -5,9 +5,19 @@ import * as fs from 'fs';
 
 const execAsync = promisify(exec);
 
+interface ServerConfig {
+  mode: 'single' | 'cluster' | 'distributed';
+  organization: string;
+  region: string;
+  port: string;
+  username: string;
+  password: string;
+  extensions: string[];
+}
+
 interface InstallationRequest {
   step: string;
-  mode: 'single' | 'cluster' | 'distributed';
+  config: ServerConfig;
 }
 
 // 检查 Docker 是否已安装并正在运行
@@ -93,7 +103,7 @@ async function testImagePull() {
 }
 
 // 部署服务
-async function deployServices(mode: 'single' | 'cluster' | 'distributed') {
+async function deployServices(config: ServerConfig) {
   try {
     const logs: string[] = ['开始部署 Zabbix 服务...'];
     
@@ -105,7 +115,16 @@ async function deployServices(mode: 'single' | 'cluster' | 'distributed') {
     // 根据部署模式选择不同的配置
     let composeContent = '';
     
-    if (mode === 'single') {
+    // 生成环境变量配置
+    const envConfig = `
+      - POSTGRES_PASSWORD=${config.password}
+      - POSTGRES_USER=${config.username}
+      - POSTGRES_DB=zabbix
+      - ZBX_SERVER_HOST=zabbix-server
+      - PHP_TZ=Asia/Shanghai
+    `;
+    
+    if (config.mode === 'single') {
       logs.push('配置单机模式部署...');
       composeContent = `version: '3.5'
 
@@ -116,9 +135,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_USER=zabbix
-      - POSTGRES_DB=zabbix
+      ${envConfig}
     restart: unless-stopped
     networks:
       - zabbit-network
@@ -127,15 +144,13 @@ services:
     image: zabbix/zabbix-server-pgsql:ubuntu-6.4-latest
     container_name: zabbit-server
     ports:
-      - "10051:10051"
+      - "${config.port}:10051"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - zabbix-server-data:/var/lib/zabbix
     environment:
       - DB_SERVER_HOST=postgres
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_DB=zabbix
+      ${envConfig}
     depends_on:
       - postgres
     restart: unless-stopped
@@ -146,14 +161,9 @@ services:
     image: zabbix/zabbix-web-nginx-pgsql:ubuntu-6.4-latest
     container_name: zabbit-web
     ports:
-      - "8080:8080"
+      - "${parseInt(config.port) + 1}:8080"
     environment:
-      - ZBX_SERVER_HOST=zabbix-server
-      - DB_SERVER_HOST=postgres
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_DB=zabbix
-      - PHP_TZ=Asia/Shanghai
+      ${envConfig}
     depends_on:
       - postgres
       - zabbix-server
@@ -168,7 +178,7 @@ networks:
 volumes:
   postgres-data:
   zabbix-server-data:`;
-    } else if (mode === 'cluster') {
+    } else if (config.mode === 'cluster') {
       logs.push('配置集群模式部署...');
       composeContent = `version: '3.5'
 
@@ -179,9 +189,7 @@ services:
     volumes:
       - postgres-master-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_USER=zabbix
-      - POSTGRES_DB=zabbix
+      ${envConfig}
     restart: unless-stopped
     networks:
       - zabbit-network
@@ -192,9 +200,7 @@ services:
     volumes:
       - postgres-slave-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_USER=zabbix
-      - POSTGRES_DB=zabbix
+      ${envConfig}
     restart: unless-stopped
     networks:
       - zabbit-network
@@ -203,15 +209,13 @@ services:
     image: zabbix/zabbix-server-pgsql:ubuntu-6.4-latest
     container_name: zabbit-server-master
     ports:
-      - "10051:10051"
+      - "${config.port}:10051"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - zabbix-server-master-data:/var/lib/zabbix
     environment:
       - DB_SERVER_HOST=postgres-master
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_DB=zabbix
+      ${envConfig}
       - ZBX_NODEADDRESS=zabbit-server-master
     depends_on:
       - postgres-master
@@ -223,15 +227,13 @@ services:
     image: zabbix/zabbix-server-pgsql:ubuntu-6.4-latest
     container_name: zabbit-server-slave
     ports:
-      - "10052:10051"
+      - "${parseInt(config.port) + 1}:10051"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - zabbix-server-slave-data:/var/lib/zabbix
     environment:
       - DB_SERVER_HOST=postgres-slave
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_DB=zabbix
+      ${envConfig}
       - ZBX_NODEADDRESS=zabbit-server-slave
     depends_on:
       - postgres-slave
@@ -243,8 +245,8 @@ services:
     image: haproxy:2.6-alpine
     container_name: zabbit-haproxy
     ports:
-      - "8080:8080"
-      - "10053:10051"
+      - "${parseInt(config.port) + 2}:8080"
+      - "${parseInt(config.port) + 3}:10051"
     volumes:
       - haproxy-config:/usr/local/etc/haproxy
     restart: unless-stopped
@@ -255,14 +257,9 @@ services:
     image: zabbix/zabbix-web-nginx-pgsql:ubuntu-6.4-latest
     container_name: zabbit-web
     ports:
-      - "8081:8080"
+      - "${parseInt(config.port) + 4}:8080"
     environment:
-      - ZBX_SERVER_HOST=haproxy
-      - DB_SERVER_HOST=postgres-master
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_DB=zabbix
-      - PHP_TZ=Asia/Shanghai
+      ${envConfig}
     depends_on:
       - postgres-master
       - zabbix-server-master
@@ -292,9 +289,7 @@ services:
     volumes:
       - postgres-master-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_USER=zabbix
-      - POSTGRES_DB=zabbix
+      ${envConfig}
     restart: unless-stopped
     networks:
       - zabbit-network
@@ -305,9 +300,7 @@ services:
     volumes:
       - postgres-slave-1-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_USER=zabbix
-      - POSTGRES_DB=zabbix
+      ${envConfig}
     restart: unless-stopped
     networks:
       - zabbit-network
@@ -318,9 +311,7 @@ services:
     volumes:
       - postgres-slave-2-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_USER=zabbix
-      - POSTGRES_DB=zabbix
+      ${envConfig}
     restart: unless-stopped
     networks:
       - zabbit-network
@@ -329,15 +320,13 @@ services:
     image: zabbix/zabbix-server-pgsql:ubuntu-6.4-latest
     container_name: zabbit-server-master
     ports:
-      - "10051:10051"
+      - "${config.port}:10051"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - zabbix-server-master-data:/var/lib/zabbix
     environment:
       - DB_SERVER_HOST=postgres-master
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_DB=zabbix
+      ${envConfig}
     depends_on:
       - postgres-master
     restart: unless-stopped
@@ -348,15 +337,13 @@ services:
     image: zabbix/zabbix-server-pgsql:ubuntu-6.4-latest
     container_name: zabbit-server-node-1
     ports:
-      - "10052:10051"
+      - "${parseInt(config.port) + 1}:10051"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - zabbix-server-node-1-data:/var/lib/zabbix
     environment:
       - DB_SERVER_HOST=postgres-slave-1
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_DB=zabbix
+      ${envConfig}
     depends_on:
       - postgres-slave-1
     restart: unless-stopped
@@ -367,15 +354,13 @@ services:
     image: zabbix/zabbix-server-pgsql:ubuntu-6.4-latest
     container_name: zabbit-server-node-2
     ports:
-      - "10053:10051"
+      - "${parseInt(config.port) + 2}:10051"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - zabbix-server-node-2-data:/var/lib/zabbix
     environment:
       - DB_SERVER_HOST=postgres-slave-2
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_DB=zabbix
+      ${envConfig}
     depends_on:
       - postgres-slave-2
     restart: unless-stopped
@@ -386,14 +371,9 @@ services:
     image: zabbix/zabbix-web-nginx-pgsql:ubuntu-6.4-latest
     container_name: zabbit-web-master
     ports:
-      - "8080:8080"
+      - "${parseInt(config.port) + 3}:8080"
     environment:
-      - ZBX_SERVER_HOST=zabbix-server-master
-      - DB_SERVER_HOST=postgres-master
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_DB=zabbix
-      - PHP_TZ=Asia/Shanghai
+      ${envConfig}
     depends_on:
       - postgres-master
       - zabbix-server-master
@@ -405,14 +385,9 @@ services:
     image: zabbix/zabbix-web-nginx-pgsql:ubuntu-6.4-latest
     container_name: zabbit-web-node-1
     ports:
-      - "8081:8080"
+      - "${parseInt(config.port) + 4}:8080"
     environment:
-      - ZBX_SERVER_HOST=zabbix-server-node-1
-      - DB_SERVER_HOST=postgres-slave-1
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_DB=zabbix
-      - PHP_TZ=Asia/Shanghai
+      ${envConfig}
     depends_on:
       - postgres-slave-1
       - zabbix-server-node-1
@@ -424,14 +399,9 @@ services:
     image: zabbix/zabbix-web-nginx-pgsql:ubuntu-6.4-latest
     container_name: zabbit-web-node-2
     ports:
-      - "8082:8080"
+      - "${parseInt(config.port) + 5}:8080"
     environment:
-      - ZBX_SERVER_HOST=zabbix-server-node-2
-      - DB_SERVER_HOST=postgres-slave-2
-      - POSTGRES_USER=zabbix
-      - POSTGRES_PASSWORD=zabbix
-      - POSTGRES_DB=zabbix
-      - PHP_TZ=Asia/Shanghai
+      ${envConfig}
     depends_on:
       - postgres-slave-2
       - zabbix-server-node-2
@@ -456,7 +426,7 @@ volumes:
     const composeFilePath = `${deployDir}/docker-compose.yml`;
     logs.push(`创建 Docker Compose 配置文件: ${composeFilePath}`);
     
-    // 使用 fs 模块写入文件，而不是通过 echo 命令
+    // 使用 fs 模块写入文件
     fs.writeFileSync(composeFilePath, composeContent);
     
     // 启动服务
@@ -475,18 +445,18 @@ volumes:
     
     // 获取服务访问地址
     let accessUrl = '';
-    if (mode === 'single') {
-      accessUrl = 'http://localhost:8080';
-    } else if (mode === 'cluster') {
-      accessUrl = 'http://localhost:8080, http://localhost:8081';
+    if (config.mode === 'single') {
+      accessUrl = `http://localhost:${parseInt(config.port) + 1}`;
+    } else if (config.mode === 'cluster') {
+      accessUrl = `http://localhost:${parseInt(config.port) + 2}, http://localhost:${parseInt(config.port) + 4}`;
     } else {
-      accessUrl = 'http://localhost:8080, http://localhost:8081, http://localhost:8082';
+      accessUrl = `http://localhost:${parseInt(config.port) + 3}, http://localhost:${parseInt(config.port) + 4}, http://localhost:${parseInt(config.port) + 5}`;
     }
     
     logs.push(`✅ Zabbix 服务部署完成！`);
     logs.push(`访问地址: ${accessUrl}`);
-    logs.push(`默认用户名: Admin`);
-    logs.push(`默认密码: zabbix`);
+    logs.push(`默认用户名: ${config.username}`);
+    logs.push(`默认密码: ${config.password}`);
     
     return {
       success: true,
@@ -505,7 +475,7 @@ volumes:
 export async function POST(request: Request) {
   try {
     const body: InstallationRequest = await request.json();
-    const { step, mode } = body;
+    const { step, config } = body;
     
     // 根据步骤执行相应的操作
     let result;
@@ -524,7 +494,7 @@ export async function POST(request: Request) {
         break;
         
       case 'deploy-services':
-        result = await deployServices(mode);
+        result = await deployServices(config);
         break;
         
       default:

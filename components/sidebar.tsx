@@ -37,17 +37,19 @@ export default function Sidebar() {
             href: '/ai',
         },
         {
+            name: '安装管理',
+            icon: <Download size={20} data-oid="95pm69n" />,
+            href: '/installation',
+        },
+        { name: '监控配置', icon: <Activity size={20} data-oid="tjp.eds" />, href: '/monitors' },
+
+        {
             name: '模板管理',
             icon: <LayoutTemplate size={20} data-oid="zhpinla" />,
             href: '/templates',
         },
         { name: '告警管理', icon: <Bell size={20} data-oid="dayoaf5" />, href: '/alerts' },
-        { name: '监控项管理', icon: <Activity size={20} data-oid="tjp.eds" />, href: '/monitors' },
-        {
-            name: '安装管理',
-            icon: <Download size={20} data-oid="95pm69n" />,
-            href: '/installation',
-        },
+
         { name: 'Server 管理', icon: <Server size={20} data-oid="server-mgmt" />, href: '/server' },
         { name: '巡检报告', icon: <FileText size={20} data-oid="11166jp" />, href: '/reports' },
         { name: '集成', icon: <Database size={20} data-oid="av4by0o" />, href: '/integration' },
