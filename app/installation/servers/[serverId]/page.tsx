@@ -7,9 +7,10 @@ import ServerDetailLayout from '../components/ServerDetailLayout';
 import ServerDetailSkeleton from '../components/ServerDetailSkeleton';
 import Sidebar from '@/components/sidebar';
 import InstallationLayout from '../../components/InstallationLayout';
+import ServerDetail from '../components/ServerDetail';
 
 // 动态导入 ServerDetail 组件
-const ServerDetail = dynamic(
+const ServerDetailComponent = dynamic(
     () => import('../components/ServerDetail'),
     {
         loading: () => <ServerDetailSkeleton />,
@@ -28,9 +29,7 @@ export default function ServerPage({ params }: ServerPageProps) {
 
     return (
         <ServerDetailLayout>
-            <Suspense fallback={<ServerDetailSkeleton />}>
-                <ServerDetail serverId={params.serverId} />
-            </Suspense>
+            <ServerDetail serverId={params.serverId} activeTab="overview" />
         </ServerDetailLayout>
     );
 } 
