@@ -45,17 +45,15 @@ export default function ServerList({ onNewServer }: ServerListProps) {
                     <div className="flex justify-between items-center">
                         <div>
                             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                                已创建的服务器
+                                Zabbix实例
                             </h3>
-                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                管理您的 Zabbix 服务器实例
-                            </p>
+                
                         </div>
                         <button
                             onClick={onNewServer}
                             className="px-4 py-2 bg-purple-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200"
                         >
-                            创建新服务器
+                            创建新Zabbix实例
                         </button>
                     </div>
                 </div>

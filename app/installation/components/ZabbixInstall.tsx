@@ -6,7 +6,7 @@ import InstallWizard from './InstallWizard';
 import InstallProgressModal, { InstallStep } from './InstallProgressModal';
 import { toast } from 'react-hot-toast';
 
-const ServerInstall = () => {
+const ZabbixInstall = () => {
   const [showInstallWizard, setShowInstallWizard] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
@@ -29,10 +29,10 @@ const ServerInstall = () => {
       // Execute installation steps from wizard
       await onComplete(serverData);
 
-      toast.success('部署成功！');
+      toast.success('Zabbix部署成功！');
       setIsCompleted(true);
     } catch (error: any) {
-      toast.error('部署失败：' + error.message);
+      toast.error('Zabbix部署失败：' + error.message);
     } finally {
       setIsDeploying(false);
     }
@@ -57,4 +57,4 @@ const ServerInstall = () => {
   );
 };
 
-export default ServerInstall;
+export default ZabbixInstall;

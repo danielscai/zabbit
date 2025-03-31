@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import Sidebar from '@/components/sidebar';
 import Header from '@/components/header';
-import ServerInstall from './components/ServerInstall';
+import ZabbixInstall from './components/ZabbixInstall';
 import ProxyInstall from './components/ProxyInstall';
 import AgentInstall from './components/AgentInstall';
 import SoftwareRepo from './components/SoftwareRepo';
 
 const TABS = [
-    { id: 'server', name: 'Server安装' },
+    { id: 'server', name: 'Zabbix安装' },
     { id: 'proxy', name: 'Proxy安装' },
     { id: 'agent', name: 'Agent安装' },
     { id: 'repo', name: '软件源' },
@@ -21,7 +21,7 @@ export default function InstallationPage() {
     const renderContent = () => {
         switch (activeTab) {
             case 'server':
-                return <ServerInstall data-oid=":7dg.7v" />;
+                return <ZabbixInstall data-oid=":7dg.7v" />;
             case 'proxy':
                 return <ProxyInstall data-oid="x2einm." />;
             case 'agent':
