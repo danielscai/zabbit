@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import ServerDetail from './ServerDetail';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface Server {
     id: string;
@@ -42,14 +41,9 @@ export default function ServerList({ onNewServer }: ServerListProps) {
         },
     ]);
 
-    const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
-
-    if (selectedServerId) {
-        return <ServerDetail 
-            serverId={selectedServerId} 
-            onBack={() => setSelectedServerId(null)} 
-        />;
-    }
+    const handleRowClick = (serverId: string) => {
+        router.push(`/installation/servers/${serverId}`);
+    };
 
     return (
         <div className="mt-6">
@@ -98,7 +92,11 @@ export default function ServerList({ onNewServer }: ServerListProps) {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                             {servers.map((server) => (
-                                <tr key={server.id}>
+                                <tr 
+                                    key={server.id}
+                                    onClick={() => handleRowClick(server.id)}
+                                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                                >
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                         {server.name}
                                     </td>
@@ -133,18 +131,12 @@ export default function ServerList({ onNewServer }: ServerListProps) {
                                         {server.createdAt}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div className="flex space-x-2">
+                                        <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
                                             <Link 
                                                 href={`/installation/servers/${server.id}/manage`}
                                                 className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                                             >
                                                 管理
-                                            </Link>
-                                            <Link 
-                                                href={`/installation/servers/${server.id}`}
-                                                className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                                            >
-                                                查看
                                             </Link>
                                             <button className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
                                                 删除
