@@ -70,10 +70,10 @@ const InstallProgressModal = ({
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-[600px] max-w-full max-h-[80vh] flex flex-col">
         {/* 标题栏 */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold">
-            {isCompleted ? '安装完成' : '安装进度'} 
+          <h2 className="text-lg font-semibold">
+            {isCompleted ? '安装完成' : '安装进度'}
             <span className="ml-2 text-sm font-normal text-gray-500">
-              {currentStepIndex + 1}/{steps.length}
+              {(steps || []).filter(step => step.status === 'completed').length + 1}/{steps?.length || 0}
             </span>
           </h2>
           <button 
