@@ -17,7 +17,6 @@ import {
     ChevronLeft,
     ChevronRight,
     Bot,
-    Server,
 } from 'lucide-react';
 
 type MenuItem = {
@@ -50,7 +49,6 @@ export default function Sidebar() {
         },
         { name: '告警管理', icon: <Bell size={20} data-oid="dayoaf5" />, href: '/alerts' },
 
-        { name: 'Server 管理', icon: <Server size={20} data-oid="server-mgmt" />, href: '/server' },
         { name: '巡检报告', icon: <FileText size={20} data-oid="11166jp" />, href: '/reports' },
         { name: '集成', icon: <Database size={20} data-oid="av4by0o" />, href: '/integration' },
         {
