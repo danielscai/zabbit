@@ -117,14 +117,9 @@ async function testImagePull(): Promise<CheckResult> {
 
 // 部署服务
 async function deployServices(config: ServerConfig): Promise<DeploymentResult> {
-  let instance;
-  let deploymentLog;
-  
   try {
-    const logs: string[] = ['开始部署 Zabbix 服务...'];
-    
     // 创建实例记录
-    instance = await prisma.zabbixInstance.create({
+    const instance = await prisma.zabbixInstance.create({
       data: {
         name: `Zabbix-${config.mode}-${new Date().getTime()}`,
         mode: config.mode,
@@ -132,41 +127,46 @@ async function deployServices(config: ServerConfig): Promise<DeploymentResult> {
         region: config.region,
         username: config.username,
         password: config.password,
-        status: 'creating',
+        status: 'installing',  // 初始状态为installing
         version: '6.4'
       }
     });
 
     // 创建部署日志
-    deploymentLog = await prisma.deploymentLog.create({
+    const deploymentLog = await prisma.deploymentLog.create({
       data: {
         instanceId: instance.id,
         step: 'deploy-services',
         status: 'running',
-        logs: logs
+        logs: ['开始部署 Zabbix 服务...']
       }
     });
 
-    // 创建临时目录存放 Docker Compose 文件
-    const deployDir = '/tmp/zabbit-deploy';
-    logs.push(`创建部署目录: ${deployDir}`);
-    await execAsync(`mkdir -p ${deployDir}`);
-    
-    // 根据部署模式选择不同的配置
-    let composeContent = '';
-    
-    // 生成环境变量配置
-    const envConfig = `
-      - POSTGRES_PASSWORD=${config.password}
-      - POSTGRES_USER=${config.username}
-      - POSTGRES_DB=zabbix
-      - ZBX_SERVER_HOST=zabbix-server
-      - PHP_TZ=Asia/Shanghai
-    `;
-    
-    if (config.mode === 'single') {
-      logs.push('配置单机模式部署...');
-      composeContent = `version: '3.5'
+    // 在后台执行部署过程
+    (async () => {
+      try {
+        const logs: string[] = ['开始部署 Zabbix 服务...'];
+        
+        // 创建临时目录存放 Docker Compose 文件
+        const deployDir = '/tmp/zabbit-deploy';
+        logs.push(`创建部署目录: ${deployDir}`);
+        await execAsync(`mkdir -p ${deployDir}`);
+        
+        // 根据部署模式选择不同的配置
+        let composeContent = '';
+        
+        // 生成环境变量配置
+        const envConfig = `
+          - POSTGRES_PASSWORD=${config.password}
+          - POSTGRES_USER=${config.username}
+          - POSTGRES_DB=zabbix
+          - ZBX_SERVER_HOST=zabbix-server
+          - PHP_TZ=Asia/Shanghai
+        `;
+        
+        if (config.mode === 'single') {
+          logs.push('配置单机模式部署...');
+          composeContent = `version: '3.5'
 
 services:
   postgres:
@@ -218,9 +218,9 @@ networks:
 volumes:
   postgres-data:
   zabbix-server-data:`;
-    } else if (config.mode === 'cluster') {
-      logs.push('配置集群模式部署...');
-      composeContent = `version: '3.5'
+        } else if (config.mode === 'cluster') {
+          logs.push('配置集群模式部署...');
+          composeContent = `version: '3.5'
 
 services:
   postgres-master:
@@ -318,9 +318,9 @@ volumes:
   zabbix-server-master-data:
   zabbix-server-slave-data:
   haproxy-config:`;
-    } else {
-      logs.push('配置分布式集群模式部署...');
-      composeContent = `version: '3.5'
+        } else {
+          logs.push('配置分布式集群模式部署...');
+          composeContent = `version: '3.5'
 
 services:
   postgres-master:
@@ -460,87 +460,79 @@ volumes:
   zabbix-server-master-data:
   zabbix-server-node-1-data:
   zabbix-server-node-2-data:`;
-    }
-    
-    // 写入 Docker Compose 文件
-    const composeFilePath = `${deployDir}/docker-compose.yml`;
-    logs.push(`创建 Docker Compose 配置文件: ${composeFilePath}`);
-    
-    // 使用 fs 模块写入文件
-    fs.writeFileSync(composeFilePath, composeContent);
-    
-    // 启动服务
-    logs.push('启动 Zabbix 服务...');
-    const { stdout: composeOutput } = await execAsync(`cd ${deployDir} && docker compose up -d --build`);
-    logs.push(composeOutput);
-    
-    // 检查服务状态
-    logs.push('检查服务状态...');
-    const { stdout: statusOutput } = await execAsync(`cd ${deployDir} && docker compose ps`);
-    logs.push(statusOutput);
-    
-    // 等待服务启动
-    logs.push('等待服务启动...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    
-    // 获取容器ID列表
-    const { stdout: containerIds } = await execAsync(`cd ${deployDir} && docker compose ps -q`);
-    const containerIdList = containerIds.split('\n').filter(id => id.length > 0);
-
-    // 获取服务访问地址
-    let accessUrls: string[] = [];
-    if (config.mode === 'single') {
-      accessUrls = [`http://localhost:${parseInt(config.port) + 1}`];
-    } else if (config.mode === 'cluster') {
-      accessUrls = [
-        `http://localhost:${parseInt(config.port) + 2}`,
-        `http://localhost:${parseInt(config.port) + 4}`
-      ];
-    } else {
-      accessUrls = [
-        `http://localhost:${parseInt(config.port) + 3}`,
-        `http://localhost:${parseInt(config.port) + 4}`,
-        `http://localhost:${parseInt(config.port) + 5}`
-      ];
-    }
-
-    // 更新实例状态
-    await prisma.zabbixInstance.update({
-      where: { id: instance.id },
-      data: {
-        status: 'running',
-        accessUrl: accessUrls[0]
-      }
-    });
-
-    // 更新部署日志
-    await prisma.deploymentLog.update({
-      where: { id: deploymentLog.id },
-      data: {
-        status: 'success',
-        logs: [...logs, '✅ Zabbix 服务部署完成！', ...accessUrls.map(url => `访问地址: ${url}`)]
-      }
-    });
-
-    return {
-      success: true,
-      logs,
-      instanceId: instance.id
-    };
-  } catch (error: any) {
-    console.error('部署服务失败:', error);
-
-    // 更新实例状态为错误
-    if (instance?.id) {
-      await prisma.zabbixInstance.update({
-        where: { id: instance.id },
-        data: {
-          status: 'error'
         }
-      });
+        
+        // 写入 Docker Compose 文件
+        const composeFilePath = `${deployDir}/docker-compose.yml`;
+        logs.push(`创建 Docker Compose 配置文件: ${composeFilePath}`);
+        
+        // 使用 fs 模块写入文件
+        fs.writeFileSync(composeFilePath, composeContent);
+        
+        // 启动服务
+        logs.push('启动 Zabbix 服务...');
+        const { stdout: composeOutput } = await execAsync(`cd ${deployDir} && docker compose up -d --build`);
+        logs.push(composeOutput);
+        
+        // 检查服务状态
+        logs.push('检查服务状态...');
+        const { stdout: statusOutput } = await execAsync(`cd ${deployDir} && docker compose ps`);
+        logs.push(statusOutput);
+        
+        // 等待服务启动
+        logs.push('等待服务启动...');
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        
+        // 获取容器ID列表
+        const { stdout: containerIds } = await execAsync(`cd ${deployDir} && docker compose ps -q`);
+        const containerIdList = containerIds.split('\n').filter(id => id.length > 0);
 
-      // 更新部署日志
-      if (deploymentLog?.id) {
+        // 获取服务访问地址
+        let accessUrls: string[] = [];
+        if (config.mode === 'single') {
+          accessUrls = [`http://localhost:${parseInt(config.port) + 1}`];
+        } else if (config.mode === 'cluster') {
+          accessUrls = [
+            `http://localhost:${parseInt(config.port) + 2}`,
+            `http://localhost:${parseInt(config.port) + 4}`
+          ];
+        } else {
+          accessUrls = [
+            `http://localhost:${parseInt(config.port) + 3}`,
+            `http://localhost:${parseInt(config.port) + 4}`,
+            `http://localhost:${parseInt(config.port) + 5}`
+          ];
+        }
+
+        // 更新实例状态
+        await prisma.zabbixInstance.update({
+          where: { id: instance.id },
+          data: {
+            status: 'running',
+            accessUrl: accessUrls[0]
+          }
+        });
+
+        // 更新部署日志
+        await prisma.deploymentLog.update({
+          where: { id: deploymentLog.id },
+          data: {
+            status: 'success',
+            logs: [...logs, '✅ Zabbix 服务部署完成！', ...accessUrls.map(url => `访问地址: ${url}`)]
+          }
+        });
+      } catch (error: any) {
+        console.error('部署服务失败:', error);
+
+        // 更新实例状态为错误
+        await prisma.zabbixInstance.update({
+          where: { id: instance.id },
+          data: {
+            status: 'error'
+          }
+        });
+
+        // 更新部署日志
         await prisma.deploymentLog.update({
           where: { id: deploymentLog.id },
           data: {
@@ -550,11 +542,18 @@ volumes:
           }
         });
       }
-    }
+    })().catch(console.error); // 启动后台任务
 
+    // 立即返回结果
+    return {
+      success: true,
+      instanceId: instance.id
+    };
+  } catch (error: any) {
+    console.error('创建实例记录失败:', error);
     return {
       success: false,
-      error: `部署服务失败: ${error.message}`
+      error: `创建实例失败: ${error.message}`
     };
   }
 }
