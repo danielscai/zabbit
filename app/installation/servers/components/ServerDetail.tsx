@@ -21,6 +21,7 @@ import DataArchiveTab from '@/app/server/components/DataArchiveTab';
 import { Form, Button, Table, Modal, Input, message, Tabs, Card, Alert, List, Timeline } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Line as AntLine } from '@ant-design/plots';
+import DeploymentLogs from './DeploymentLogs';
 
 // 注册 Chart.js 组件
 ChartJS.register(
@@ -239,6 +240,13 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
                             {serverInfo.name}
                         </h1>
+                        <span className={`px-3 py-1 rounded-full text-sm ${
+                            serverInfo.status === 'running' ? 'bg-green-100 text-green-800' :
+                            serverInfo.status === 'stopped' ? 'bg-gray-100 text-gray-800' :
+                            'bg-red-100 text-red-800'
+                        }`}>
+                            {serverInfo.status === 'running' ? '运行中' : serverInfo.status === 'stopped' ? '已停止' : '错误'}
+                        </span>
                     </div>
                 </div>
 
@@ -262,80 +270,87 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                     </div>
 
                     <div className="p-6">
+                        <h1 className="text-2xl font-bold mb-6">服务器详情</h1>
                         {activeTab === 'overview' && (
                             <div className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">状态</h4>
-                                        <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-                                            {serverInfo.status === 'running' ? '运行中' : serverInfo.status === 'stopped' ? '已停止' : '错误'}
-                                        </p>
-                                    </div>
-                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">版本</h4>
-                                        <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-                                            {serverInfo.version}
-                                        </p>
-                                    </div>
-                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">运行时间</h4>
-                                        <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-                                            {serverInfo.uptime}
-                                        </p>
-                                    </div>
-                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">最后备份</h4>
-                                        <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-                                            {new Date(serverInfo.lastBackup).toLocaleString('zh-CN')}
-                                        </p>
-                                    </div>
-                                </div>
+                                {/* 基本信息和部署日志并排显示 */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    {/* 左侧：基本信息 */}
+                                    <div className="lg:col-span-1 space-y-6">
+                                        <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">基本信息</h4>
+                                            <dl className="space-y-2">
+                                                <div className="flex justify-between">
+                                                    <dt className="text-sm text-gray-500 dark:text-gray-400">组织</dt>
+                                                    <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {serverInfo.organization}
+                                                    </dd>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <dt className="text-sm text-gray-500 dark:text-gray-400">区域</dt>
+                                                    <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {serverInfo.region}
+                                                    </dd>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <dt className="text-sm text-gray-500 dark:text-gray-400">部署模式</dt>
+                                                    <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {serverInfo.mode === 'single' ? '单机' : serverInfo.mode === 'cluster' ? '集群' : '分布式'}
+                                                    </dd>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <dt className="text-sm text-gray-500 dark:text-gray-400">版本</dt>
+                                                    <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {serverInfo.version}
+                                                    </dd>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <dt className="text-sm text-gray-500 dark:text-gray-400">运行时间</dt>
+                                                    <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {serverInfo.uptime}
+                                                    </dd>
+                                                </div>
+                                            </dl>
+                                        </div>
 
-                                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                                    <Line options={chartOptions} data={metrics} />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">基本信息</h4>
-                                        <dl className="space-y-2">
-                                            <div className="flex justify-between">
-                                                <dt className="text-sm text-gray-500 dark:text-gray-400">组织</dt>
-                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {serverInfo.organization}
-                                                </dd>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <dt className="text-sm text-gray-500 dark:text-gray-400">区域</dt>
-                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {serverInfo.region}
-                                                </dd>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <dt className="text-sm text-gray-500 dark:text-gray-400">部署模式</dt>
-                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {serverInfo.mode === 'single' ? '单机' : serverInfo.mode === 'cluster' ? '集群' : '分布式'}
-                                                </dd>
-                                            </div>
-                                        </dl>
+                                        <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">备份信息</h4>
+                                            <dl className="space-y-2">
+                                                <div className="flex justify-between">
+                                                    <dt className="text-sm text-gray-500 dark:text-gray-400">数据库备份</dt>
+                                                    <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {new Date(serverInfo.lastBackup).toLocaleString('zh-CN')}
+                                                    </dd>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <dt className="text-sm text-gray-500 dark:text-gray-400">配置备份</dt>
+                                                    <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {new Date(serverInfo.lastConfigBackup).toLocaleString('zh-CN')}
+                                                    </dd>
+                                                </div>
+                                            </dl>
+                                        </div>
                                     </div>
 
-                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">备份信息</h4>
-                                        <dl className="space-y-2">
-                                            <div className="flex justify-between">
-                                                <dt className="text-sm text-gray-500 dark:text-gray-400">数据库备份</dt>
-                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {new Date(serverInfo.lastBackup).toLocaleString('zh-CN')}
-                                                </dd>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <dt className="text-sm text-gray-500 dark:text-gray-400">配置备份</dt>
-                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {new Date(serverInfo.lastConfigBackup).toLocaleString('zh-CN')}
-                                                </dd>
-                                            </div>
-                                        </dl>
+                                    {/* 右侧：监控图表和部署日志 */}
+                                    <div className="lg:col-span-2 space-y-6">
+                                        {/* 监控图表 */}
+                                        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700" style={{ height: '300px' }}>
+                                            <Line options={{
+                                                ...chartOptions,
+                                                maintainAspectRatio: false,
+                                                plugins: {
+                                                    ...chartOptions.plugins,
+                                                    title: {
+                                                        ...chartOptions.plugins.title,
+                                                        text: '资源使用率'
+                                                    }
+                                                }
+                                            }} data={metrics} />
+                                        </div>
+
+                                        {/* 部署日志 */}
+                                        <DeploymentLogs />
                                     </div>
                                 </div>
                             </div>
