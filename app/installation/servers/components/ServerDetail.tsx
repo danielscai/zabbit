@@ -334,41 +334,72 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                                 {/* 左侧：基本信息 */}
                                 <div className="lg:col-span-1 space-y-6">
                                     {/* 基本信息卡片 */}
-                                    <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
-                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">基本信息</h4>
-                                        <dl className="space-y-2">
-                                            <div className="flex justify-between">
-                                                <dt className="text-sm text-gray-500 dark:text-gray-400">组织</dt>
-                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {serverInfo.organization}
-                                                </dd>
+                                    <div className="bg-white dark:bg-gray-700 rounded-lg shadow overflow-hidden">
+                                        <div className="px-6 py-4 bg-gradient-to-r from-purple-500/10 to-purple-500/5 border-b border-gray-100">
+                                            <h4 className="text-base font-semibold text-gray-900 dark:text-white">基本信息</h4>
+                                        </div>
+                                        <div className="p-6">
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div className="col-span-2">
+                                                    <div className="flex items-center space-x-3 mb-4">
+                                                        <div className="flex-shrink-0">
+                                                            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                                                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-sm text-gray-500">组织</div>
+                                                            <div className="text-base font-medium text-gray-900 dark:text-white">
+                                                                {serverInfo.organization}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="flex flex-col">
+                                                        <div className="text-sm text-gray-500 mb-1">区域</div>
+                                                        <div className="text-base font-medium text-gray-900 dark:text-white flex items-center">
+                                                            <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                            </svg>
+                                                            {serverInfo.region}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="flex flex-col">
+                                                        <div className="text-sm text-gray-500 mb-1">部署模式</div>
+                                                        <div className="text-base font-medium text-gray-900 dark:text-white flex items-center">
+                                                            <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                                            </svg>
+                                                            {serverInfo.mode === 'single' ? '单机' : serverInfo.mode === 'cluster' ? '集群' : '分布式'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <div className="flex flex-col">
+                                                        <div className="text-sm text-gray-500 mb-1">部署时间</div>
+                                                        <div className="text-base font-medium text-gray-900 dark:text-white flex items-center">
+                                                            <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                            </svg>
+                                                            {new Date(serverInfo.createdAt).toLocaleString('zh-CN')}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="flex justify-between">
-                                                <dt className="text-sm text-gray-500 dark:text-gray-400">区域</dt>
-                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {serverInfo.region}
-                                                </dd>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <dt className="text-sm text-gray-500 dark:text-gray-400">部署模式</dt>
-                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {serverInfo.mode === 'single' ? '单机' : serverInfo.mode === 'cluster' ? '集群' : '分布式'}
-                                                </dd>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <dt className="text-sm text-gray-500 dark:text-gray-400">部署时间</dt>
-                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {new Date(serverInfo.createdAt).toLocaleString('zh-CN')}
-                                                </dd>
-                                            </div>
-                                        </dl>
+                                        </div>
                                         {!shouldShowDeployLogs && (
-                                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                            <div className="px-6 pb-6">
                                                 <Button 
                                                     type="default"
                                                     icon={<HistoryOutlined />}
                                                     onClick={() => setIsDeployLogsModalOpen(true)}
-                                                    className="w-full flex items-center justify-center text-gray-600 hover:text-purple-600 hover:border-purple-600"
+                                                    className="w-full h-10 flex items-center justify-center bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100 hover:border-purple-300 hover:text-purple-700 transition-colors"
                                                 >
                                                     查看部署记录
                                                 </Button>
@@ -377,22 +408,37 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                                     </div>
 
                                     {/* 备份信息卡片 */}
-                                    <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
-                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">备份信息</h4>
-                                        <dl className="space-y-2">
-                                            <div className="flex justify-between">
-                                                <dt className="text-sm text-gray-500 dark:text-gray-400">数据库备份</dt>
-                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {new Date(serverInfo.lastBackup).toLocaleString('zh-CN')}
-                                                </dd>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <dt className="text-sm text-gray-500 dark:text-gray-400">配置备份</dt>
-                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {new Date(serverInfo.lastConfigBackup).toLocaleString('zh-CN')}
-                                                </dd>
-                                            </div>
-                                        </dl>
+                                    <div className="bg-white dark:bg-gray-700 rounded-lg shadow overflow-hidden">
+                                        <div className="px-6 py-4 bg-gradient-to-r from-purple-500/10 to-purple-500/5 border-b border-gray-100">
+                                            <h4 className="text-base font-semibold text-gray-900 dark:text-white">备份信息</h4>
+                                        </div>
+                                        <div className="p-6">
+                                            <dl className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <dt className="flex items-center text-sm text-gray-500">
+                                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zm0 0h16"/>
+                                                        </svg>
+                                                        数据库备份
+                                                    </dt>
+                                                    <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {new Date(serverInfo.lastBackup).toLocaleString('zh-CN')}
+                                                    </dd>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <dt className="flex items-center text-sm text-gray-500">
+                                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                        </svg>
+                                                        配置备份
+                                                    </dt>
+                                                    <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {new Date(serverInfo.lastConfigBackup).toLocaleString('zh-CN')}
+                                                    </dd>
+                                                </div>
+                                            </dl>
+                                        </div>
                                     </div>
                                 </div>
 
