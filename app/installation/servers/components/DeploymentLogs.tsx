@@ -3,44 +3,45 @@ import { Timeline } from 'antd';
 import { CheckCircleOutlined, SyncOutlined, CloseCircleOutlined } from '@ant-design/icons';
 
 interface LogEntry {
-    timestamp: string;
-    message: string;
-    level: 'info' | 'error' | 'warning';
+    id: string;
+    createdAt: string;
     step: string;
-    status: 'success' | 'running' | 'error' | 'pending';
+    status: 'success' | 'running' | 'error';
+    logs: string[];
+    errorMessage?: string;
 }
 
-const DeploymentLogs: React.FC = () => {
-    const [logs, setLogs] = useState<LogEntry[]>([
-        {
-            timestamp: '2024-03-20 10:30:15',
-            message: '检查 Docker 环境',
-            level: 'info',
-            step: 'check-docker',
-            status: 'success'
-        },
-        {
-            timestamp: '2024-03-20 10:30:20',
-            message: '检查 Docker Compose',
-            level: 'info',
-            step: 'check-compose',
-            status: 'success'
-        },
-        {
-            timestamp: '2024-03-20 10:30:25',
-            message: '测试 Docker 镜像拉取',
-            level: 'info',
-            step: 'pull-images',
-            status: 'success'
-        },
-        {
-            timestamp: '2024-03-20 10:30:30',
-            message: '部署 Zabbix 服务',
-            level: 'info',
-            step: 'deploy-services',
-            status: 'running'
+interface DeploymentLogsProps {
+    instanceId: string;
+    refreshInterval?: number;
+}
+
+const DeploymentLogs: React.FC<DeploymentLogsProps> = ({ instanceId, refreshInterval = 5000 }) => {
+    const [logs, setLogs] = useState<LogEntry[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchLogs = async () => {
+        try {
+            const response = await fetch(`/api/installation/logs?instanceId=${instanceId}`);
+            if (!response.ok) {
+                throw new Error('获取日志失败');
+            }
+            const data = await response.json();
+            setLogs(data);
+            setError(null);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : '获取日志时发生错误');
+        } finally {
+            setLoading(false);
         }
-    ]);
+    };
+
+    useEffect(() => {
+        fetchLogs();
+        const interval = setInterval(fetchLogs, refreshInterval);
+        return () => clearInterval(interval);
+    }, [instanceId, refreshInterval]);
 
     const getIcon = (status: string) => {
         switch (status) {
@@ -55,29 +56,55 @@ const DeploymentLogs: React.FC = () => {
         }
     };
 
+    if (loading) {
+        return <div className="flex justify-center items-center p-4">
+            <SyncOutlined spin className="text-blue-500 text-2xl" />
+        </div>;
+    }
+
+    if (error) {
+        return <div className="text-red-500 p-4">{error}</div>;
+    }
+
     return (
         <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-semibold mb-4">部署进度</h2>
-            <Timeline
-                items={logs.map(log => ({
-                    dot: getIcon(log.status),
-                    children: (
-                        <div key={log.step} className="mb-4">
-                            <div className="flex items-center justify-between">
-                                <span className="font-medium">{log.message}</span>
-                                <span className="text-sm text-gray-500">{log.timestamp}</span>
-                            </div>
-                            {log.status === 'running' && (
-                                <div className="mt-2">
-                                    <div className="h-1 w-full bg-gray-200 rounded">
-                                        <div className="h-1 bg-blue-500 rounded w-3/4 animate-pulse"></div>
-                                    </div>
+            <h2 className="text-lg font-semibold mb-4">部署日志</h2>
+            {logs.length === 0 ? (
+                <div className="text-gray-500 text-center p-4">暂无部署日志</div>
+            ) : (
+                <Timeline
+                    items={logs.map(log => ({
+                        dot: getIcon(log.status),
+                        children: (
+                            <div key={log.id} className="mb-4">
+                                <div className="flex items-center justify-between">
+                                    <span className="font-medium">{log.step}</span>
+                                    <span className="text-sm text-gray-500">
+                                        {new Date(log.createdAt).toLocaleString('zh-CN')}
+                                    </span>
                                 </div>
-                            )}
-                        </div>
-                    )
-                }))}
-            />
+                                {log.logs.length > 0 && (
+                                    <div className="mt-2 bg-gray-50 rounded p-2 text-sm">
+                                        {log.logs.map((logLine, index) => (
+                                            <div key={index} className="text-gray-600">{logLine}</div>
+                                        ))}
+                                    </div>
+                                )}
+                                {log.errorMessage && (
+                                    <div className="mt-2 text-red-500 text-sm">{log.errorMessage}</div>
+                                )}
+                                {log.status === 'running' && (
+                                    <div className="mt-2">
+                                        <div className="h-1 w-full bg-gray-200 rounded">
+                                            <div className="h-1 bg-blue-500 rounded w-3/4 animate-pulse"></div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    }))}
+                />
+            )}
         </div>
     );
 };
