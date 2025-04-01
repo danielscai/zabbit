@@ -109,7 +109,19 @@ const TABS = [
 export default function ServerDetail({ serverId, activeTab = 'overview' }: ServerDetailProps) {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
+    const [serverInfo, setServerInfo] = useState<ServerInfo>({
+        id: serverId,
+        name: '实例名称',
+        organization: '组织',
+        region: '区域',
+        mode: 'single',
+        status: 'running',
+        version: '1.0.0',
+        uptime: '24h',
+        lastBackup: '2024-03-20',
+        lastConfigBackup: '2024-03-20',
+        metrics: []
+    });
     const [metrics, setMetrics] = useState<MetricData>({
         labels: [],
         datasets: []
@@ -227,154 +239,143 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <button
-                        onClick={handleBack}
-                        className="mb-4 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-                    >
-                        ← 返回列表
-                    </button>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {serverInfo.name}
-                    </h2>
-                </div>
-                <div className="flex space-x-2">
-                    <button
-                        className={`px-4 py-2 rounded-md text-sm font-medium ${
-                            serverInfo.status === 'running'
-                                ? 'bg-red-600 text-white hover:bg-red-700'
-                                : 'bg-green-600 text-white hover:bg-green-700'
-                        }`}
-                    >
-                        {serverInfo.status === 'running' ? '停止' : '启动'}
-                    </button>
-                    <button
-                        className="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700"
-                    >
-                        重启
-                    </button>
-                </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-                <div className="border-b border-gray-200 dark:border-gray-700">
-                    <nav className="-mb-px flex">
-                        {TABS.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => handleTabChange(tab.id)}
-                                className={`${
-                                    activeTab === tab.id
-                                        ? 'border-purple-500 text-purple-600 dark:text-purple-400'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
-                            >
-                                {tab.name}
-                            </button>
-                        ))}
-                    </nav>
+            <div className="p-6">
+                {/* 顶部标题栏 */}
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-4">
+                        <button
+                            onClick={() => router.push('/installation/servers')}
+                            className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                        </button>
+                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                            {serverInfo.name}
+                        </h1>
+                    </div>
                 </div>
 
-                <div className="p-6">
-                    {activeTab === 'overview' && (
-                        <div className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">状态</h4>
-                                    <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-                                        {serverInfo.status === 'running' ? '运行中' : serverInfo.status === 'stopped' ? '已停止' : '错误'}
-                                    </p>
+                <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+                    <div className="border-b border-gray-200 dark:border-gray-700">
+                        <nav className="-mb-px flex">
+                            {TABS.map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => handleTabChange(tab.id)}
+                                    className={`${
+                                        activeTab === tab.id
+                                            ? 'border-purple-500 text-purple-600 dark:text-purple-400'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                                    } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
+                                >
+                                    {tab.name}
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+
+                    <div className="p-6">
+                        {activeTab === 'overview' && (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">状态</h4>
+                                        <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
+                                            {serverInfo.status === 'running' ? '运行中' : serverInfo.status === 'stopped' ? '已停止' : '错误'}
+                                        </p>
+                                    </div>
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">版本</h4>
+                                        <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
+                                            {serverInfo.version}
+                                        </p>
+                                    </div>
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">运行时间</h4>
+                                        <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
+                                            {serverInfo.uptime}
+                                        </p>
+                                    </div>
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">最后备份</h4>
+                                        <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
+                                            {new Date(serverInfo.lastBackup).toLocaleString('zh-CN')}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">版本</h4>
-                                    <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-                                        {serverInfo.version}
-                                    </p>
+
+                                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <Line options={chartOptions} data={metrics} />
                                 </div>
-                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">运行时间</h4>
-                                    <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-                                        {serverInfo.uptime}
-                                    </p>
-                                </div>
-                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">最后备份</h4>
-                                    <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-                                        {new Date(serverInfo.lastBackup).toLocaleString('zh-CN')}
-                                    </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">基本信息</h4>
+                                        <dl className="space-y-2">
+                                            <div className="flex justify-between">
+                                                <dt className="text-sm text-gray-500 dark:text-gray-400">组织</dt>
+                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {serverInfo.organization}
+                                                </dd>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <dt className="text-sm text-gray-500 dark:text-gray-400">区域</dt>
+                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {serverInfo.region}
+                                                </dd>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <dt className="text-sm text-gray-500 dark:text-gray-400">部署模式</dt>
+                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {serverInfo.mode === 'single' ? '单机' : serverInfo.mode === 'cluster' ? '集群' : '分布式'}
+                                                </dd>
+                                            </div>
+                                        </dl>
+                                    </div>
+
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">备份信息</h4>
+                                        <dl className="space-y-2">
+                                            <div className="flex justify-between">
+                                                <dt className="text-sm text-gray-500 dark:text-gray-400">数据库备份</dt>
+                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {new Date(serverInfo.lastBackup).toLocaleString('zh-CN')}
+                                                </dd>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <dt className="text-sm text-gray-500 dark:text-gray-400">配置备份</dt>
+                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {new Date(serverInfo.lastConfigBackup).toLocaleString('zh-CN')}
+                                                </dd>
+                                            </div>
+                                        </dl>
+                                    </div>
                                 </div>
                             </div>
+                        )}
 
-                            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <Line options={chartOptions} data={metrics} />
-                            </div>
+                        {activeTab === 'database-backup' && (
+                            <DatabaseBackupTab />
+                        )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">基本信息</h4>
-                                    <dl className="space-y-2">
-                                        <div className="flex justify-between">
-                                            <dt className="text-sm text-gray-500 dark:text-gray-400">组织</dt>
-                                            <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {serverInfo.organization}
-                                            </dd>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <dt className="text-sm text-gray-500 dark:text-gray-400">区域</dt>
-                                            <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {serverInfo.region}
-                                            </dd>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <dt className="text-sm text-gray-500 dark:text-gray-400">部署模式</dt>
-                                            <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {serverInfo.mode === 'single' ? '单机' : serverInfo.mode === 'cluster' ? '集群' : '分布式'}
-                                            </dd>
-                                        </div>
-                                    </dl>
-                                </div>
+                        {activeTab === 'config-backup' && (
+                            <ConfigBackupTab />
+                        )}
 
-                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">备份信息</h4>
-                                    <dl className="space-y-2">
-                                        <div className="flex justify-between">
-                                            <dt className="text-sm text-gray-500 dark:text-gray-400">数据库备份</dt>
-                                            <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {new Date(serverInfo.lastBackup).toLocaleString('zh-CN')}
-                                            </dd>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <dt className="text-sm text-gray-500 dark:text-gray-400">配置备份</dt>
-                                            <dd className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {new Date(serverInfo.lastConfigBackup).toLocaleString('zh-CN')}
-                                            </dd>
-                                        </div>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                        {activeTab === 'data-archive' && (
+                            <DataArchiveTab />
+                        )}
 
-                    {activeTab === 'database-backup' && (
-                        <DatabaseBackupTab />
-                    )}
+                        {activeTab === 'management' && (
+                            <ManagementTab serverId={serverId} />
+                        )}
 
-                    {activeTab === 'config-backup' && (
-                        <ConfigBackupTab />
-                    )}
-
-                    {activeTab === 'data-archive' && (
-                        <DataArchiveTab />
-                    )}
-
-                    {activeTab === 'management' && (
-                        <ManagementTab serverId={serverId} />
-                    )}
-
-                    {activeTab === 'self-monitoring' && (
-                        <SelfMonitoringTab serverId={serverId} />
-                    )}
+                        {activeTab === 'self-monitoring' && (
+                            <SelfMonitoringTab serverId={serverId} />
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
