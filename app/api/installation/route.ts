@@ -13,7 +13,6 @@ interface ServerConfig {
   port: string;
   username: string;
   password: string;
-  extensions: string[];
 }
 
 interface InstallationRequest {
@@ -127,16 +126,14 @@ async function deployServices(config: ServerConfig): Promise<DeploymentResult> {
     // 创建实例记录
     instance = await prisma.zabbixInstance.create({
       data: {
+        name: `Zabbix-${config.mode}-${new Date().getTime()}`,
         mode: config.mode,
         organization: config.organization,
         region: config.region,
-        port: config.port,
         username: config.username,
         password: config.password,
-        extensions: config.extensions,
         status: 'creating',
-        accessUrls: [],
-        containerIds: []
+        version: '6.4'
       }
     });
 
@@ -512,8 +509,7 @@ volumes:
       where: { id: instance.id },
       data: {
         status: 'running',
-        accessUrls: accessUrls,
-        containerIds: containerIdList
+        accessUrl: accessUrls[0]
       }
     });
 
@@ -539,8 +535,7 @@ volumes:
       await prisma.zabbixInstance.update({
         where: { id: instance.id },
         data: {
-          status: 'error',
-          errorMessage: error.message
+          status: 'error'
         }
       });
 
@@ -550,7 +545,8 @@ volumes:
           where: { id: deploymentLog.id },
           data: {
             status: 'error',
-            errorMessage: error.message
+            errorMessage: error.message,
+            logs: [...(deploymentLog.logs || []), `错误: ${error.message}`]
           }
         });
       }
