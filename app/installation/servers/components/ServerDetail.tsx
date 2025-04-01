@@ -13,14 +13,17 @@ import {
     PointElement,
     LineElement,
     Title,
-    Tooltip,
-    Legend,
+    Tooltip as ChartTooltip,
+    Legend as ChartLegend,
     ChartData,
     ChartOptions
 } from 'chart.js';
+import { Form, Button, Table, Modal, Input, message, Tabs, Card, Alert, List, Timeline } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { Line as AntLine } from '@ant-design/plots';
 
 // 动态导入图表组件
-const Line = dynamic(
+const ChartLine = dynamic(
     () => import('react-chartjs-2').then(mod => mod.Line),
     { ssr: false }
 );
@@ -32,8 +35,8 @@ ChartJS.register(
     PointElement,
     LineElement,
     Title,
-    Tooltip,
-    Legend
+    ChartTooltip,
+    ChartLegend
 );
 
 interface MetricData extends ChartData<'line'> {
@@ -50,11 +53,38 @@ interface MetricData extends ChartData<'line'> {
     }[];
 }
 
+interface Region {
+    id: string;
+    name: string;
+    createdAt: string;
+}
+
+interface HealthMetric {
+    time: string;
+    value: number;
+    category: string;
+}
+
+interface AlertChannel {
+    name: string;
+    channel: string;
+    description: string;
+}
+
+interface MonitoringEvent {
+    time: string;
+    event: string;
+    status: string;
+    channel: string;
+}
+
 const TABS = [
     { id: 'overview', name: '概览', path: '' },
     { id: 'database-backup', name: '数据库备份', path: '/database-backup' },
     { id: 'config-backup', name: '配置备份', path: '/config-backup' },
     { id: 'data-archive', name: '数据归档', path: '/data-archive' },
+    { id: 'management', name: '管理', path: '/management' },
+    { id: 'self-monitoring', name: '自监控', path: '/self-monitoring' },
 ];
 
 interface ServerDetailProps {
@@ -240,7 +270,7 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                                         </h3>
                                     </div>
                                     <div className="p-6">
-                                        <Line options={{
+                                        <AntLine options={{
                                             responsive: true,
                                             maintainAspectRatio: false,
                                             plugins: {
@@ -337,7 +367,228 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                         {activeTab === 'data-archive' && (
                             <DataArchiveTab />
                         )}
+
+                        {activeTab === 'management' && (
+                            <ManagementTab serverId={serverId} />
+                        )}
+
+                        {activeTab === 'self-monitoring' && (
+                            <SelfMonitoringTab serverId={serverId} />
+                        )}
                     </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+interface ManagementTabProps {
+    serverId: string;
+}
+
+function ManagementTab({ serverId }: ManagementTabProps) {
+    const [regions, setRegions] = useState<Region[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [form] = Form.useForm();
+
+    const columns = [
+        {
+            title: '区域名称',
+            dataIndex: 'name',
+            key: 'name',
+        },
+        {
+            title: '创建时间',
+            dataIndex: 'createdAt',
+            key: 'createdAt',
+        }
+    ];
+
+    const handleAddRegion = async (values: { name: string }) => {
+        try {
+            // TODO: 调用API创建新区域
+            const newRegion = {
+                id: Date.now().toString(),
+                name: values.name,
+                createdAt: new Date().toLocaleString()
+            };
+            setRegions([...regions, newRegion]);
+            message.success('区域创建成功');
+            setIsModalOpen(false);
+            form.resetFields();
+        } catch (error) {
+            message.error('创建失败');
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                            区域管理
+                        </h3>
+                        <Button 
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            添加区域
+                        </Button>
+                    </div>
+                </div>
+                <div className="p-6">
+                    <Table 
+                        columns={columns}
+                        dataSource={regions}
+                        rowKey="id"
+                    />
+                </div>
+            </div>
+
+            <Modal
+                title="添加新区域"
+                open={isModalOpen}
+                onCancel={() => setIsModalOpen(false)}
+                footer={null}
+            >
+                <Form
+                    form={form}
+                    onFinish={handleAddRegion}
+                    layout="vertical"
+                >
+                    <Form.Item
+                        name="name"
+                        label="区域名称"
+                        rules={[{ required: true, message: '请输入区域名称' }]}
+                    >
+                        <Input placeholder="例如：上海、北京" />
+                    </Form.Item>
+                    <Form.Item className="text-right">
+                        <Button type="default" className="mr-2" onClick={() => setIsModalOpen(false)}>
+                            取消
+                        </Button>
+                        <Button type="primary" htmlType="submit">
+                            确定
+                        </Button>
+                    </Form.Item>
+                </Form>
+            </Modal>
+        </div>
+    );
+}
+
+interface SelfMonitoringTabProps {
+    serverId: string;
+}
+
+function SelfMonitoringTab({ serverId }: SelfMonitoringTabProps) {
+    const [healthMetrics, setHealthMetrics] = useState<HealthMetric[]>([
+        { time: '00:00', value: 95, category: '系统健康度' },
+        { time: '04:00', value: 92, category: '系统健康度' },
+        { time: '08:00', value: 88, category: '系统健康度' },
+        { time: '12:00', value: 95, category: '系统健康度' },
+        { time: '16:00', value: 90, category: '系统健康度' },
+        { time: '20:00', value: 93, category: '系统健康度' },
+    ]);
+
+    const alertChannels: AlertChannel[] = [
+        { name: '紧急告警', channel: 'Telegram群组', description: '服务器宕机、数据库不可用等紧急情况' },
+        { name: '重要告警', channel: '企业微信', description: '性能告警、磁盘空间不足等重要问题' },
+        { name: '普通告警', channel: '邮件', description: '日常监控指标异常' },
+    ];
+
+    const recentEvents: MonitoringEvent[] = [
+        { time: '2024-03-31 15:00', event: 'CPU使用率超过90%', status: '已通知', channel: 'Telegram' },
+        { time: '2024-03-31 14:30', event: '磁盘使用率达到警戒值', status: '已处理', channel: '企业微信' },
+        { time: '2024-03-31 13:45', event: '数据库连接数异常', status: '处理中', channel: '邮件' },
+    ];
+
+    const config = {
+        data: healthMetrics,
+        xField: 'time',
+        yField: 'value',
+        seriesField: 'category',
+        smooth: true,
+        yAxis: {
+            min: 0,
+            max: 100,
+            title: {
+                text: '健康度 (%)',
+            },
+        },
+        tooltip: {
+            title: '时间',
+            formatter: (datum: HealthMetric) => {
+                return { name: datum.category, value: datum.value + '%' };
+            },
+        },
+        animation: {
+            appear: {
+                animation: 'path-in',
+                duration: 1000,
+            },
+        },
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* 健康度图表 */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                        系统健康度
+                    </h3>
+                </div>
+                <div className="p-6" style={{ height: '300px' }}>
+                    <AntLine {...config} />
+                </div>
+            </div>
+
+            {/* 告警通道配置 */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                        告警通道配置
+                    </h3>
+                </div>
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {alertChannels.map((channel, index) => (
+                            <div key={index} className="border rounded-lg p-4">
+                                <h4 className="font-medium text-gray-900 dark:text-white">{channel.name}</h4>
+                                <p className="text-sm text-gray-500 mt-1">{channel.channel}</p>
+                                <p className="text-sm text-gray-500 mt-1">{channel.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* 最近事件 */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                        最近事件
+                    </h3>
+                </div>
+                <div className="p-6">
+                    <List
+                        dataSource={recentEvents}
+                        renderItem={(event) => (
+                            <List.Item>
+                                <List.Item.Meta
+                                    title={event.event}
+                                    description={
+                                        <div className="text-sm text-gray-500">
+                                            通知渠道: {event.channel} | 状态: {event.status} | 时间: {event.time}
+                                        </div>
+                                    }
+                                />
+                            </List.Item>
+                        )}
+                    />
                 </div>
             </div>
         </div>
