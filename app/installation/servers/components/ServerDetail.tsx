@@ -19,8 +19,8 @@ import { toast } from 'react-hot-toast';
 import DatabaseBackupTab from '@/app/server/components/DatabaseBackupTab';
 import ConfigBackupTab from '@/app/server/components/ConfigBackupTab';
 import DataArchiveTab from '@/app/server/components/DataArchiveTab';
-import { Form, Button, Table, Modal, Input, message, Tabs, Card, Alert, List, Timeline } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Form, Button, Table, Modal, Input, message, Tabs, Card, Alert, List, Timeline, Collapse } from 'antd';
+import { PlusOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
 import { Line as AntLine } from '@ant-design/plots';
 import DeploymentLogs from './DeploymentLogs';
 
@@ -111,6 +111,8 @@ const TABS = [
 export default function ServerDetail({ serverId, activeTab = 'overview' }: ServerDetailProps) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [showDeployLogs, setShowDeployLogs] = useState(true);
+    const [isDeployLogsModalOpen, setIsDeployLogsModalOpen] = useState(false);
     const [serverInfo, setServerInfo] = useState<ServerInfo>({
         id: serverId,
         name: '实例名称',
@@ -129,9 +131,19 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
         datasets: []
     });
 
+    // 检查是否需要显示部署日志
+    const shouldShowDeployLogs = serverInfo.status === 'installing' || serverInfo.status === 'error';
+
     useEffect(() => {
         fetchServerDetails();
     }, [serverId]);
+
+    useEffect(() => {
+        // 如果状态是 installing 或 error，自动展开部署日志
+        if (shouldShowDeployLogs) {
+            setShowDeployLogs(true);
+        }
+    }, [serverInfo.status]);
 
     const fetchServerDetails = async () => {
         try {
@@ -379,8 +391,49 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                                         }} data={metrics} />
                                     </div>
 
-                                    {/* 部署日志 */}
-                                    <DeploymentLogs instanceId={serverId} refreshInterval={5000} />
+                                    {/* 部署状态提示 */}
+                                    {shouldShowDeployLogs && (
+                                        <Alert
+                                            message={
+                                                <div className="flex items-center justify-between">
+                                                    <span>
+                                                        {serverInfo.status === 'installing' ? '正在部署中...' : '部署出现错误'}
+                                                    </span>
+                                                    <Button 
+                                                        type="link" 
+                                                        onClick={() => setShowDeployLogs(!showDeployLogs)}
+                                                        icon={showDeployLogs ? <DownOutlined /> : <RightOutlined />}
+                                                    >
+                                                        {showDeployLogs ? '收起日志' : '展开日志'}
+                                                    </Button>
+                                                </div>
+                                            }
+                                            type={serverInfo.status === 'installing' ? 'info' : 'error'}
+                                            showIcon
+                                        />
+                                    )}
+
+                                    {/* 部署日志（可折叠） */}
+                                    {shouldShowDeployLogs && showDeployLogs && (
+                                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                                            <DeploymentLogs 
+                                                instanceId={serverId} 
+                                                refreshInterval={10000}  // 增加到10秒
+                                                autoRefresh={serverInfo.status === 'installing'} 
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* 查看完整日志按钮 */}
+                                    {!shouldShowDeployLogs && (
+                                        <Button 
+                                            type="link" 
+                                            onClick={() => setIsDeployLogsModalOpen(true)}
+                                            className="w-full text-center"
+                                        >
+                                            查看部署日志历史
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -407,6 +460,21 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                     )}
                 </div>
             </div>
+
+            {/* 部署日志历史弹窗 */}
+            <Modal
+                title="部署日志历史"
+                open={isDeployLogsModalOpen}
+                onCancel={() => setIsDeployLogsModalOpen(false)}
+                width={800}
+                footer={null}
+            >
+                <DeploymentLogs 
+                    instanceId={serverId} 
+                    refreshInterval={0}
+                    autoRefresh={false}
+                />
+            </Modal>
         </div>
     );
 }

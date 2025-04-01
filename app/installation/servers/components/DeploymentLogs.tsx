@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Timeline } from 'antd';
 import { CheckCircleOutlined, SyncOutlined, CloseCircleOutlined } from '@ant-design/icons';
 
@@ -14,12 +14,19 @@ interface LogEntry {
 interface DeploymentLogsProps {
     instanceId: string;
     refreshInterval?: number;
+    autoRefresh?: boolean;
 }
 
-const DeploymentLogs: React.FC<DeploymentLogsProps> = ({ instanceId, refreshInterval = 5000 }) => {
+const DeploymentLogs: React.FC<DeploymentLogsProps> = ({ 
+    instanceId, 
+    refreshInterval = 5000,
+    autoRefresh = false
+}) => {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [lastLogId, setLastLogId] = useState<string | null>(null);
+    const intervalRef = useRef<NodeJS.Timeout>();
 
     const fetchLogs = async () => {
         try {
@@ -28,10 +35,30 @@ const DeploymentLogs: React.FC<DeploymentLogsProps> = ({ instanceId, refreshInte
                 throw new Error('获取日志失败');
             }
             const data = await response.json();
-            setLogs(data);
+            
+            // 检查是否有新日志
+            const newLastLogId = data[0]?.id;
+            if (newLastLogId !== lastLogId) {
+                setLogs(data);
+                setLastLogId(newLastLogId);
+            }
+            
             setError(null);
+
+            // 如果所有日志都是完成状态，停止轮询
+            const allCompleted = data.every(
+                (log: LogEntry) => log.status === 'success' || log.status === 'error'
+            );
+            if (allCompleted && intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+
         } catch (err) {
             setError(err instanceof Error ? err.message : '获取日志时发生错误');
+            // 发生错误时也停止轮询
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
         } finally {
             setLoading(false);
         }
@@ -39,9 +66,18 @@ const DeploymentLogs: React.FC<DeploymentLogsProps> = ({ instanceId, refreshInte
 
     useEffect(() => {
         fetchLogs();
-        const interval = setInterval(fetchLogs, refreshInterval);
-        return () => clearInterval(interval);
-    }, [instanceId, refreshInterval]);
+
+        // 只在需要自动刷新时设置轮询
+        if (autoRefresh) {
+            intervalRef.current = setInterval(fetchLogs, refreshInterval);
+        }
+
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, [instanceId, refreshInterval, autoRefresh]);
 
     const getIcon = (status: string) => {
         switch (status) {
