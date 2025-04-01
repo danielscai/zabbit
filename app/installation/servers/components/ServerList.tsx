@@ -29,6 +29,7 @@ export default function ServerList({ onNewServer }: ServerListProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [pageSize] = useState(10);
+    const [total, setTotal] = useState(0);
 
     useEffect(() => {
         fetchServers();
@@ -63,29 +64,25 @@ export default function ServerList({ onNewServer }: ServerListProps) {
             if (!response.ok) {
                 throw new Error('获取服务器列表失败');
             }
-            const data = await response.json();
+            const { data, pagination } = await response.json();
             
             // 验证返回的数据格式
             if (!Array.isArray(data)) {
                 console.error('API返回数据格式错误:', data);
                 setServers([]);
                 setTotalPages(1);
+                setTotal(0);
                 return;
             }
             
-            // 按创建时间倒序排序
-            const sortedServers = [...data].sort((a: Server, b: Server) => 
-                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            );
-            
-            setServers(sortedServers);
-            // 使用数组长度计算总页数
-            setTotalPages(Math.max(1, Math.ceil(sortedServers.length / pageSize)));
+            setServers(data);
+            setTotalPages(pagination.totalPages);
+            setTotal(pagination.total);
 
             // 更新最近创建的实例集合
             const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
             const newRecentlyCreated = new Set(
-                sortedServers
+                data
                     .filter((server: Server) => new Date(server.createdAt) > thirtySecondsAgo)
                     .map((server: Server) => server.id)
             ) as Set<string>;
@@ -95,6 +92,7 @@ export default function ServerList({ onNewServer }: ServerListProps) {
             toast.error('获取服务器列表失败');
             setServers([]);
             setTotalPages(1);
+            setTotal(0);
         } finally {
             setLoading(false);
         }
@@ -275,10 +273,10 @@ export default function ServerList({ onNewServer }: ServerListProps) {
                                 <p className="text-sm text-gray-700 dark:text-gray-300">
                                     显示第 <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> 到{' '}
                                     <span className="font-medium">
-                                        {Math.min(currentPage * pageSize, servers.length)}
+                                        {Math.min(currentPage * pageSize, total)}
                                     </span>{' '}
                                     条，共{' '}
-                                    <span className="font-medium">{servers.length}</span> 条
+                                    <span className="font-medium">{total}</span> 条
                                 </p>
                             </div>
                             <div>

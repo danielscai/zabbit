@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import ServerList from './ServerList';
 import InstallWizard from './InstallWizard';
-import { toast } from 'react-hot-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid';
 
 interface DeployResult {
     success: boolean;
@@ -72,12 +74,6 @@ const ZabbixInstall = () => {
             setDeployResult(result);
             setShowResultDialog(true);
             setShowInstallWizard(false);
-            
-            if (result.success) {
-                toast.success('Zabbix部署成功！');
-            } else {
-                toast.error('Zabbix部署失败！');
-            }
         } catch (error: any) {
             console.error('安装过程出错:', error);
             const errorMessage = error.message || '未知错误';
@@ -89,7 +85,6 @@ const ZabbixInstall = () => {
             });
             setShowResultDialog(true);
             setShowInstallWizard(false);
-            toast.error(`Zabbix部署失败：${errorMessage}`);
         }
     };
 
@@ -105,122 +100,179 @@ const ZabbixInstall = () => {
 
             {/* 部署结果弹窗 */}
             <Dialog open={showResultDialog} onOpenChange={setShowResultDialog}>
-                <DialogContent className="sm:max-w-[600px]">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            {deployResult?.success ? (
-                                <>
-                                    <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span>部署成功</span>
-                                </>
-                            ) : (
-                                <>
-                                    <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                    <span>部署失败</span>
-                                </>
-                            )}
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    <div className="mt-4 space-y-4">
-                        {deployResult?.success ? (
-                            <>
-                                <div className="rounded-lg bg-green-50 p-4">
-                                    <div className="flex">
-                                        <div className="flex-shrink-0">
-                                            <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
-                                        </div>
-                                        <div className="ml-3">
-                                            <h3 className="text-sm font-medium text-green-800">部署完成</h3>
-                                            <div className="mt-2 text-sm text-green-700">
-                                                <p>Zabbix 服务已成功部署！您可以通过以下信息访问系统：</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                                    <div className="flex items-center">
-                                        <span className="font-medium text-gray-500 w-24">访问地址：</span>
-                                        <a href={deployResult.accessUrl} target="_blank" rel="noopener noreferrer" 
-                                           className="text-purple-600 hover:text-purple-800">
-                                            {deployResult.accessUrl}
-                                        </a>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <span className="font-medium text-gray-500 w-24">用户名：</span>
-                                        <span className="text-gray-900">{deployResult.username}</span>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <span className="font-medium text-gray-500 w-24">密码：</span>
-                                        <span className="text-gray-900">{deployResult.password}</span>
-                                    </div>
-                                </div>
-
-                                <div className="bg-yellow-50 rounded-lg p-4">
-                                    <div className="flex">
-                                        <div className="flex-shrink-0">
-                                            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                            </svg>
-                                        </div>
-                                        <div className="ml-3">
-                                            <h3 className="text-sm font-medium text-yellow-800">安全提示</h3>
-                                            <div className="mt-2 text-sm text-yellow-700">
-                                                <p>请及时修改默认密码以确保系统安全！</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="rounded-lg bg-red-50 p-4">
-                                <div className="flex">
-                                    <div className="flex-shrink-0">
-                                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <div className="ml-3">
-                                        <h3 className="text-sm font-medium text-red-800">部署失败</h3>
-                                        <div className="mt-2 text-sm text-red-700">
-                                            <p>{deployResult?.error || '未知错误'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 部署日志 */}
-                        {deployResult?.logs && deployResult.logs.length > 0 && (
-                            <div className="mt-4">
-                                <h4 className="text-sm font-medium text-gray-900 mb-2">部署日志</h4>
-                                <div className="bg-gray-100 rounded-lg p-3 max-h-40 overflow-y-auto">
-                                    {deployResult.logs.map((log, index) => (
-                                        <div key={index} className="text-sm text-gray-600 font-mono">
-                                            {log}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="mt-6 flex justify-end">
-                        <button
-                            type="button"
-                            onClick={() => setShowResultDialog(false)}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                <DialogContent className="sm:max-w-[600px] p-0 gap-0 overflow-hidden">
+                    <AnimatePresence>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="relative"
                         >
-                            关闭
-                        </button>
-                    </div>
+                            {/* 背景装饰 */}
+                            <div className="absolute inset-0 overflow-hidden">
+                                <div className={`absolute inset-0 ${deployResult?.success ? 'bg-green-50' : 'bg-red-50'} opacity-20`} />
+                                <motion.div
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 0.1 }}
+                                    transition={{ duration: 0.5, delay: 0.2 }}
+                                    className={`absolute -top-1/2 -right-1/2 w-full h-full rounded-full ${
+                                        deployResult?.success ? 'bg-green-200' : 'bg-red-200'
+                                    }`}
+                                />
+                            </div>
+
+                            {/* 内容区域 */}
+                            <div className="relative p-6">
+                                <motion.div
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ duration: 0.3, delay: 0.1 }}
+                                    className="flex flex-col items-center text-center"
+                                >
+                                    {/* 状态图标 */}
+                                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
+                                        deployResult?.success ? 'bg-green-100' : 'bg-red-100'
+                                    }`}>
+                                        <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            transition={{ 
+                                                type: "spring",
+                                                stiffness: 260,
+                                                damping: 20,
+                                                delay: 0.2 
+                                            }}
+                                        >
+                                            {deployResult?.success ? (
+                                                <CheckCircleIcon className="w-10 h-10 text-green-600" />
+                                            ) : (
+                                                <XCircleIcon className="w-10 h-10 text-red-600" />
+                                            )}
+                                        </motion.div>
+                                    </div>
+
+                                    {/* 标题和描述 */}
+                                    <motion.h3
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3, delay: 0.3 }}
+                                        className={`text-xl font-semibold mb-2 ${
+                                            deployResult?.success ? 'text-green-700' : 'text-red-700'
+                                        }`}
+                                    >
+                                        {deployResult?.success ? '部署成功' : '部署失败'}
+                                    </motion.h3>
+
+                                    <motion.p
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3, delay: 0.4 }}
+                                        className="text-gray-600 mb-6"
+                                    >
+                                        {deployResult?.success
+                                            ? 'Zabbix 服务已成功部署，您可以通过以下信息访问系统'
+                                            : deployResult?.error || '部署过程中发生错误'}
+                                    </motion.p>
+
+                                    {/* 访问信息 */}
+                                    {deployResult?.success && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.3, delay: 0.5 }}
+                                            className="w-full max-w-sm bg-white rounded-lg border border-gray-200 p-4 mb-6"
+                                        >
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-sm text-gray-500">访问地址</span>
+                                                    <a
+                                                        href={deployResult.accessUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-sm text-purple-600 hover:text-purple-700 flex items-center"
+                                                    >
+                                                        {deployResult.accessUrl}
+                                                        <ArrowTopRightOnSquareIcon className="w-4 h-4 ml-1" />
+                                                    </a>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-sm text-gray-500">用户名</span>
+                                                    <span className="text-sm font-medium">{deployResult.username}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-sm text-gray-500">密码</span>
+                                                    <span className="text-sm font-medium">{deployResult.password}</span>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+
+                                    {/* 部署日志 */}
+                                    {deployResult?.logs && deployResult.logs.length > 0 && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.3, delay: 0.6 }}
+                                            className="w-full"
+                                        >
+                                            <div className="text-sm font-medium text-gray-700 mb-2 text-left">部署日志</div>
+                                            <div className="bg-gray-50 rounded-lg p-3 max-h-40 overflow-y-auto text-left">
+                                                {deployResult.logs.map((log, index) => (
+                                                    <div key={index} className="text-sm text-gray-600 font-mono mb-1">
+                                                        {log}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    )}
+
+                                    {/* 按钮 */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3, delay: 0.7 }}
+                                        className="mt-6 flex gap-3"
+                                    >
+                                        {deployResult?.success ? (
+                                            <>
+                                                <button
+                                                    onClick={() => window.open(deployResult.accessUrl, '_blank')}
+                                                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                                                >
+                                                    访问系统
+                                                </button>
+                                                <button
+                                                    onClick={() => setShowResultDialog(false)}
+                                                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                                                >
+                                                    关闭
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={() => {
+                                                        setShowResultDialog(false);
+                                                        setShowInstallWizard(true);
+                                                    }}
+                                                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                                                >
+                                                    重试
+                                                </button>
+                                                <button
+                                                    onClick={() => setShowResultDialog(false)}
+                                                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                                                >
+                                                    关闭
+                                                </button>
+                                            </>
+                                        )}
+                                    </motion.div>
+                                </motion.div>
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>
                 </DialogContent>
             </Dialog>
         </>

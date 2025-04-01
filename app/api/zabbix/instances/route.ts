@@ -15,9 +15,23 @@ const createInstanceSchema = z.object({
 });
 
 // GET /api/zabbix/instances
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = parseInt(searchParams.get('pageSize') || '10');
+    const skip = (page - 1) * pageSize;
+
+    // 获取总记录数
+    const total = await prisma.zabbixInstance.count();
+
+    // 获取分页数据
     const instances = await prisma.zabbixInstance.findMany({
+      skip,
+      take: pageSize,
+      orderBy: {
+        createdAt: 'desc'
+      },
       include: {
         metrics: {
           where: {
@@ -31,7 +45,16 @@ export async function GET() {
         }
       }
     });
-    return NextResponse.json(instances);
+
+    return NextResponse.json({
+      data: instances,
+      pagination: {
+        total,
+        totalPages: Math.ceil(total / pageSize),
+        currentPage: page,
+        pageSize
+      }
+    });
   } catch (error) {
     console.error('获取Zabbix实例列表失败:', error);
     return NextResponse.json(

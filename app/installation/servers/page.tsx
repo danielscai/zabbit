@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import ServerList from './components/ServerList';
 import InstallationLayout from '../components/InstallationLayout';
 import InstallWizard from '../components/InstallWizard';
-import { toast } from 'react-hot-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface DeployResult {
@@ -79,11 +78,8 @@ export default function ServersPage() {
             setIsWizardOpen(false);
             
             if (result.success) {
-                toast.success('Zabbix部署请求已提交！');
                 // 刷新服务器列表
                 router.refresh();
-            } else {
-                toast.error('Zabbix部署失败！');
             }
         } catch (error: any) {
             console.error('安装过程出错:', error);
@@ -93,7 +89,6 @@ export default function ServersPage() {
             });
             setShowResultDialog(true);
             setIsWizardOpen(false);
-            toast.error(`Zabbix部署失败：${error.message}`);
         }
     };
 
