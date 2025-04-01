@@ -36,7 +36,7 @@ export default function Sidebar() {
             href: '/ai',
         },
         {
-            name: '安装管理',
+            name: '实例管理',
             icon: <Download size={20} data-oid="95pm69n" />,
             href: '/installation',
         },

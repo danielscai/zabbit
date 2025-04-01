@@ -52,7 +52,7 @@ export default function InstallationLayout({ children }: InstallationLayoutProps
             <Sidebar />
             <div className="flex-1 flex flex-col overflow-hidden">
                 <Header
-                    title="安装管理"
+                    title="实例管理"
                     tabs={TABS}
                     activeTab={activeTab}
                     onTabChange={handleTabChange}
