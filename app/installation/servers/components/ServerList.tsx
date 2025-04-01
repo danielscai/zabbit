@@ -24,34 +24,77 @@ export default function ServerList({ onNewServer }: ServerListProps) {
     const [servers, setServers] = useState<Server[]>([]);
     const [loading, setLoading] = useState(true);
     const [recentlyCreated, setRecentlyCreated] = useState<Set<string>>(new Set());
+    
+    // 分页状态
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [pageSize] = useState(10);
 
     useEffect(() => {
         fetchServers();
-        // 设置定时刷新，每10秒刷新一次
-        const intervalId = setInterval(fetchServers, 10000);
+        // 设置3秒刷新一次
+        const intervalId = setInterval(fetchServers, 3000);
         return () => clearInterval(intervalId);
-    }, []);
+    }, [currentPage, pageSize]);
+
+    // 处理新创建实例的高亮效果
+    useEffect(() => {
+        const timeouts: NodeJS.Timeout[] = [];
+        
+        servers.forEach(server => {
+            if (recentlyCreated.has(server.id)) {
+                const timeout = setTimeout(() => {
+                    setRecentlyCreated(prev => {
+                        const next = new Set(prev);
+                        next.delete(server.id);
+                        return next;
+                    });
+                }, 30000); // 30秒后移除高亮
+                timeouts.push(timeout);
+            }
+        });
+
+        return () => timeouts.forEach(clearTimeout);
+    }, [servers, recentlyCreated]);
 
     const fetchServers = async () => {
         try {
-            const response = await fetch('/api/zabbix/instances');
+            const response = await fetch(`/api/zabbix/instances?page=${currentPage}&pageSize=${pageSize}`);
             if (!response.ok) {
                 throw new Error('获取服务器列表失败');
             }
             const data = await response.json();
-            setServers(data);
+            
+            // 验证返回的数据格式
+            if (!Array.isArray(data)) {
+                console.error('API返回数据格式错误:', data);
+                setServers([]);
+                setTotalPages(1);
+                return;
+            }
+            
+            // 按创建时间倒序排序
+            const sortedServers = [...data].sort((a: Server, b: Server) => 
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            
+            setServers(sortedServers);
+            // 使用数组长度计算总页数
+            setTotalPages(Math.max(1, Math.ceil(sortedServers.length / pageSize)));
 
             // 更新最近创建的实例集合
-            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+            const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
             const newRecentlyCreated = new Set(
-                data.filter((server: Server) => 
-                    new Date(server.createdAt) > fiveMinutesAgo
-                ).map((server: Server) => server.id)
+                sortedServers
+                    .filter((server: Server) => new Date(server.createdAt) > thirtySecondsAgo)
+                    .map((server: Server) => server.id)
             ) as Set<string>;
             setRecentlyCreated(newRecentlyCreated);
         } catch (error) {
             console.error('获取服务器列表失败:', error);
             toast.error('获取服务器列表失败');
+            setServers([]);
+            setTotalPages(1);
         } finally {
             setLoading(false);
         }
@@ -71,7 +114,12 @@ export default function ServerList({ onNewServer }: ServerListProps) {
             case 'stopped':
                 return {
                     text: '已停止',
-                    className: 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                    className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
+                };
+            case 'error':
+                return {
+                    text: '错误',
+                    className: 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100 animate-pulse'
                 };
             case 'installing':
                 return {
@@ -80,8 +128,8 @@ export default function ServerList({ onNewServer }: ServerListProps) {
                 };
             default:
                 return {
-                    text: '错误',
-                    className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
+                    text: '未知',
+                    className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
                 };
         }
     };
@@ -203,6 +251,93 @@ export default function ServerList({ onNewServer }: ServerListProps) {
                             )}
                         </tbody>
                     </table>
+
+                    {/* 分页控件 */}
+                    <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex-1 flex justify-between sm:hidden">
+                            <button
+                                onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+                                disabled={currentPage === 1}
+                                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                上一页
+                            </button>
+                            <button
+                                onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
+                                disabled={currentPage === totalPages}
+                                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                下一页
+                            </button>
+                        </div>
+                        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                    显示第 <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> 到{' '}
+                                    <span className="font-medium">
+                                        {Math.min(currentPage * pageSize, servers.length)}
+                                    </span>{' '}
+                                    条，共{' '}
+                                    <span className="font-medium">{servers.length}</span> 条
+                                </p>
+                            </div>
+                            <div>
+                                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                    <button
+                                        onClick={() => setCurrentPage(1)}
+                                        disabled={currentPage === 1}
+                                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <span className="sr-only">首页</span>
+                                        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0l5 5a1 1 0 010 1.414z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+                                        disabled={currentPage === 1}
+                                        className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        上一页
+                                    </button>
+                                    {/* 页码按钮 */}
+                                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                        const pageNum = i + 1;
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                                                    currentPage === pageNum
+                                                        ? 'z-10 bg-purple-50 border-purple-500 text-purple-600'
+                                                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    })}
+                                    <button
+                                        onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        下一页
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentPage(totalPages)}
+                                        disabled={currentPage === totalPages}
+                                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <span className="sr-only">末页</span>
+                                        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
