@@ -380,7 +380,7 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                                     </div>
 
                                     {/* 部署日志 */}
-                                    <DeploymentLogs />
+                                    <DeploymentLogs instanceId={serverId} refreshInterval={5000} />
                                 </div>
                             </div>
                         </div>
