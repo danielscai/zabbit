@@ -1,14 +1,32 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import InstallationLayout from './components/InstallationLayout';
+import InstallWizard from './components/InstallWizard';
 
 export default function InstallationPage() {
     const router = useRouter();
+    const [isWizardOpen, setIsWizardOpen] = useState(true);
 
-    useEffect(() => {
-        router.replace('/installation/servers');
-    }, [router]);
+    const handleClose = () => {
+        setIsWizardOpen(false);
+        router.back();
+    };
 
-    return null;
+    const handleComplete = (data: any) => {
+        console.log('Installation completed:', data);
+        setIsWizardOpen(false);
+        router.back();
+    };
+
+    return (
+        <InstallationLayout>
+            <InstallWizard 
+                isOpen={isWizardOpen}
+                onClose={handleClose}
+                onComplete={handleComplete}
+            />
+        </InstallationLayout>
+    );
 }
