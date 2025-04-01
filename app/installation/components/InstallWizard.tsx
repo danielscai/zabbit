@@ -301,21 +301,22 @@ export default function InstallWizard({ isOpen, onClose, onComplete }: InstallWi
                             </div>
                             <div>
                                 <label
-                                    htmlFor="password"
+                                    htmlFor="admin_pwd"
                                     className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                                 >
                                     管理员密码
                                 </label>
                                 <input
                                     type="text"
-                                    id="password"
+                                    id="admin_pwd"
                                     value={formData.password}
                                     maxLength={30}
                                     onChange={(e) =>
                                         setFormData({ ...formData, password: e.target.value })
                                     }
                                     className="block w-full p-3 rounded-md border border-gray-300 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    placeholder="请输入密码"
+                                    placeholder="请设置管理员登录口令"
+                                    autoComplete="off"
                                 />
                             </div>
                             
