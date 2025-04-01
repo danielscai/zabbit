@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 
 interface Server {
     id: string;
@@ -20,30 +21,52 @@ interface ServerListProps {
 
 export default function ServerList({ onNewServer }: ServerListProps) {
     const router = useRouter();
-    const [servers] = useState<Server[]>([
-        {
-            id: '1',
-            name: '生产环境 Zabbix',
-            organization: '技术部',
-            region: '上海',
-            mode: 'cluster',
-            status: 'running',
-            createdAt: '2024-03-29 15:30:00',
-        },
-        {
-            id: '2',
-            name: '测试环境 Zabbix',
-            organization: '研发部',
-            region: '北京',
-            mode: 'single',
-            status: 'stopped',
-            createdAt: '2024-03-29 14:20:00',
-        },
-    ]);
+    const [servers, setServers] = useState<Server[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchServers();
+    }, []);
+
+    const fetchServers = async () => {
+        try {
+            const response = await fetch('/api/zabbix/instances');
+            if (!response.ok) {
+                throw new Error('获取服务器列表失败');
+            }
+            const data = await response.json();
+            setServers(data);
+        } catch (error) {
+            console.error('获取服务器列表失败:', error);
+            toast.error('获取服务器列表失败');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleRowClick = (serverId: string) => {
         router.push(`/installation/servers/${serverId}`);
     };
+
+    if (loading) {
+        return (
+            <div className="mt-6">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <div className="animate-pulse flex space-x-4">
+                            <div className="flex-1 space-y-4 py-1">
+                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                <div className="space-y-2">
+                                    <div className="h-4 bg-gray-200 rounded"></div>
+                                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="mt-6">
@@ -63,88 +86,74 @@ export default function ServerList({ onNewServer }: ServerListProps) {
                         </button>
                     </div>
                 </div>
-                <div className="px-6 py-4">
+
+                <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     名称
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     组织
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    地区
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    区域
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    部署模式
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    模式
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     状态
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     创建时间
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    操作
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                            {servers.map((server) => (
-                                <tr 
-                                    key={server.id}
-                                    onClick={() => handleRowClick(server.id)}
-                                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
-                                >
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                        {server.name}
+                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {servers.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                        暂无Zabbix实例
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                        {server.organization}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                        {server.region}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                        {server.mode === 'single' ? '单机部署' : 
-                                         server.mode === 'cluster' ? '集群部署' : '分布式部署'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                        <span
-                                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                </tr>
+                            ) : (
+                                servers.map((server) => (
+                                    <tr
+                                        key={server.id}
+                                        onClick={() => handleRowClick(server.id)}
+                                        className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-200"
+                                    >
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                            {server.name}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                            {server.organization}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                            {server.region}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                            {server.mode === 'single' ? '单机' : server.mode === 'cluster' ? '集群' : '分布式'}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                                 server.status === 'running'
                                                     ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
                                                     : server.status === 'stopped'
-                                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
-                                                    : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-                                            }`}
-                                        >
-                                            {server.status === 'running'
-                                                ? '运行中'
-                                                : server.status === 'stopped'
-                                                ? '已停止'
-                                                : '错误'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                        {server.createdAt}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
-                                            <Link 
-                                                href={`/installation/servers/${server.id}/management`}
-                                                className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                                            >
-                                                管理
-                                            </Link>
-                                            <button className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                                                删除
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                                                    ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
+                                            }`}>
+                                                {server.status === 'running' ? '运行中' : server.status === 'stopped' ? '已停止' : '错误'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                            {new Date(server.createdAt).toLocaleString('zh-CN')}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>

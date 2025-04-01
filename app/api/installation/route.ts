@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
+import { prisma } from '@/lib/prisma';
 
 const execAsync = promisify(exec);
 
@@ -20,8 +21,21 @@ interface InstallationRequest {
   config: ServerConfig;
 }
 
+interface DeploymentResult {
+  success: boolean;
+  logs?: string[];
+  error?: string;
+  instanceId?: string;
+}
+
+interface CheckResult {
+  success: boolean;
+  logs?: string[];
+  error?: string;
+}
+
 // 检查 Docker 是否已安装并正在运行
-async function checkDocker() {
+async function checkDocker(): Promise<CheckResult> {
   try {
     const { stdout: versionOutput } = await execAsync('docker --version');
     const { stdout: infoOutput } = await execAsync('docker info');
@@ -45,7 +59,7 @@ async function checkDocker() {
 }
 
 // 检查 Docker Compose 是否已安装
-async function checkDockerCompose() {
+async function checkDockerCompose(): Promise<CheckResult> {
   try {
     const { stdout } = await execAsync('docker compose version');
     
@@ -66,7 +80,7 @@ async function checkDockerCompose() {
 }
 
 // 测试 Docker 拉取功能
-async function testImagePull() {
+async function testImagePull(): Promise<CheckResult> {
   try {
     const logs: string[] = ['测试 Docker 镜像拉取功能...'];
     
@@ -103,10 +117,39 @@ async function testImagePull() {
 }
 
 // 部署服务
-async function deployServices(config: ServerConfig) {
+async function deployServices(config: ServerConfig): Promise<DeploymentResult> {
+  let instance;
+  let deploymentLog;
+  
   try {
     const logs: string[] = ['开始部署 Zabbix 服务...'];
     
+    // 创建实例记录
+    instance = await prisma.zabbixInstance.create({
+      data: {
+        mode: config.mode,
+        organization: config.organization,
+        region: config.region,
+        port: config.port,
+        username: config.username,
+        password: config.password,
+        extensions: config.extensions,
+        status: 'creating',
+        accessUrls: [],
+        containerIds: []
+      }
+    });
+
+    // 创建部署日志
+    deploymentLog = await prisma.deploymentLog.create({
+      data: {
+        instanceId: instance.id,
+        step: 'deploy-services',
+        status: 'running',
+        logs: logs
+      }
+    });
+
     // 创建临时目录存放 Docker Compose 文件
     const deployDir = '/tmp/zabbit-deploy';
     logs.push(`创建部署目录: ${deployDir}`);
@@ -443,27 +486,76 @@ volumes:
     logs.push('等待服务启动...');
     await new Promise(resolve => setTimeout(resolve, 5000));
     
+    // 获取容器ID列表
+    const { stdout: containerIds } = await execAsync(`cd ${deployDir} && docker compose ps -q`);
+    const containerIdList = containerIds.split('\n').filter(id => id.length > 0);
+
     // 获取服务访问地址
-    let accessUrl = '';
+    let accessUrls: string[] = [];
     if (config.mode === 'single') {
-      accessUrl = `http://localhost:${parseInt(config.port) + 1}`;
+      accessUrls = [`http://localhost:${parseInt(config.port) + 1}`];
     } else if (config.mode === 'cluster') {
-      accessUrl = `http://localhost:${parseInt(config.port) + 2}, http://localhost:${parseInt(config.port) + 4}`;
+      accessUrls = [
+        `http://localhost:${parseInt(config.port) + 2}`,
+        `http://localhost:${parseInt(config.port) + 4}`
+      ];
     } else {
-      accessUrl = `http://localhost:${parseInt(config.port) + 3}, http://localhost:${parseInt(config.port) + 4}, http://localhost:${parseInt(config.port) + 5}`;
+      accessUrls = [
+        `http://localhost:${parseInt(config.port) + 3}`,
+        `http://localhost:${parseInt(config.port) + 4}`,
+        `http://localhost:${parseInt(config.port) + 5}`
+      ];
     }
-    
-    logs.push(`✅ Zabbix 服务部署完成！`);
-    logs.push(`访问地址: ${accessUrl}`);
-    logs.push(`默认用户名: ${config.username}`);
-    logs.push(`默认密码: ${config.password}`);
-    
+
+    // 更新实例状态
+    await prisma.zabbixInstance.update({
+      where: { id: instance.id },
+      data: {
+        status: 'running',
+        accessUrls: accessUrls,
+        containerIds: containerIdList
+      }
+    });
+
+    // 更新部署日志
+    await prisma.deploymentLog.update({
+      where: { id: deploymentLog.id },
+      data: {
+        status: 'success',
+        logs: [...logs, '✅ Zabbix 服务部署完成！', ...accessUrls.map(url => `访问地址: ${url}`)]
+      }
+    });
+
     return {
       success: true,
-      logs
+      logs,
+      instanceId: instance.id
     };
   } catch (error: any) {
     console.error('部署服务失败:', error);
+
+    // 更新实例状态为错误
+    if (instance?.id) {
+      await prisma.zabbixInstance.update({
+        where: { id: instance.id },
+        data: {
+          status: 'error',
+          errorMessage: error.message
+        }
+      });
+
+      // 更新部署日志
+      if (deploymentLog?.id) {
+        await prisma.deploymentLog.update({
+          where: { id: deploymentLog.id },
+          data: {
+            status: 'error',
+            errorMessage: error.message
+          }
+        });
+      }
+    }
+
     return {
       success: false,
       error: `部署服务失败: ${error.message}`
@@ -477,8 +569,20 @@ export async function POST(request: Request) {
     const body: InstallationRequest = await request.json();
     const { step, config } = body;
     
-    // 根据步骤执行相应的操作
-    let result;
+    let result: CheckResult | DeploymentResult;
+    let deploymentLog;
+    
+    // 创建部署日志
+    if (step !== 'deploy-services') {
+      deploymentLog = await prisma.deploymentLog.create({
+        data: {
+          instanceId: 'system-check', // 用于系统检查的特殊ID
+          step,
+          status: 'running',
+          logs: []
+        }
+      });
+    }
     
     switch (step) {
       case 'check-docker':
@@ -504,6 +608,18 @@ export async function POST(request: Request) {
         );
     }
     
+    // 更新部署日志状态
+    if (deploymentLog?.id) {
+      await prisma.deploymentLog.update({
+        where: { id: deploymentLog.id },
+        data: {
+          status: result.success ? 'success' : 'error',
+          logs: result.logs || [],
+          errorMessage: result.error
+        }
+      });
+    }
+    
     // 处理操作结果
     if (!result.success) {
       return NextResponse.json(
@@ -516,24 +632,10 @@ export async function POST(request: Request) {
       );
     }
     
-    // 获取访问地址
-    let accessUrl = '';
-    if (config && step === 'deploy-services') {
-      if (config.mode === 'single') {
-        accessUrl = `http://localhost:${parseInt(config.port) + 1}`;
-      } else if (config.mode === 'cluster') {
-        accessUrl = `http://localhost:${parseInt(config.port) + 2}`;
-      } else {
-        accessUrl = `http://localhost:${parseInt(config.port) + 3}`;
-      }
-    }
-    
     return NextResponse.json({
       success: true,
       logs: result.logs || [],
-      accessUrl,
-      username: config?.username,
-      password: config?.password
+      instanceId: step === 'deploy-services' ? (result as DeploymentResult).instanceId : undefined
     });
   } catch (error: any) {
     console.error('API 错误:', error);

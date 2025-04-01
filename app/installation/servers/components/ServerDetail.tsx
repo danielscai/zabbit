@@ -2,10 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import DatabaseBackupTab from '@/app/server/components/DatabaseBackupTab';
-import ConfigBackupTab from '@/app/server/components/ConfigBackupTab';
-import DataArchiveTab from '@/app/server/components/DataArchiveTab';
+import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -13,20 +10,17 @@ import {
     PointElement,
     LineElement,
     Title,
-    Tooltip as ChartTooltip,
-    Legend as ChartLegend,
-    ChartData,
-    ChartOptions
+    Tooltip,
+    Legend,
+    Filler
 } from 'chart.js';
+import { toast } from 'react-hot-toast';
+import DatabaseBackupTab from '@/app/server/components/DatabaseBackupTab';
+import ConfigBackupTab from '@/app/server/components/ConfigBackupTab';
+import DataArchiveTab from '@/app/server/components/DataArchiveTab';
 import { Form, Button, Table, Modal, Input, message, Tabs, Card, Alert, List, Timeline } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Line as AntLine } from '@ant-design/plots';
-
-// 动态导入图表组件
-const ChartLine = dynamic(
-    () => import('react-chartjs-2').then(mod => mod.Line),
-    { ssr: false }
-);
 
 // 注册 Chart.js 组件
 ChartJS.register(
@@ -35,8 +29,9 @@ ChartJS.register(
     PointElement,
     LineElement,
     Title,
-    ChartTooltip,
-    ChartLegend
+    Tooltip,
+    Legend,
+    Filler
 );
 
 interface MetricData extends ChartData<'line'> {
@@ -78,6 +73,30 @@ interface MonitoringEvent {
     channel: string;
 }
 
+interface ServerDetailProps {
+    serverId: string;
+    activeTab?: string;
+}
+
+interface ServerInfo {
+    id: string;
+    name: string;
+    organization: string;
+    region: string;
+    mode: string;
+    status: string;
+    version: string;
+    uptime: string;
+    lastBackup: string;
+    lastConfigBackup: string;
+    metrics: {
+        id: string;
+        metricType: string;
+        value: number;
+        timestamp: string;
+    }[];
+}
+
 const TABS = [
     { id: 'overview', name: '概览', path: '' },
     { id: 'management', name: '管理', path: '/management' },
@@ -87,51 +106,77 @@ const TABS = [
     { id: 'data-archive', name: '数据归档', path: '/data-archive' },
 ];
 
-interface ServerDetailProps {
-    serverId: string;
-    activeTab?: string;
-}
-
 export default function ServerDetail({ serverId, activeTab = 'overview' }: ServerDetailProps) {
     const router = useRouter();
-    const [serverInfo, setServerInfo] = useState({
-        id: serverId,
-        name: '生产环境 Zabbix',
-        organization: '技术部',
-        region: '上海',
-        mode: 'cluster',
-        status: 'running',
-        version: '6.4.0',
-        uptime: '99.99%',
-        lastBackup: '2024-03-29 12:00:00',
-        lastConfigBackup: '2024-03-29 00:00:00'
+    const [loading, setLoading] = useState(true);
+    const [serverInfo, setServerInfo] = useState<ServerInfo | null>(null);
+    const [metrics, setMetrics] = useState<MetricData>({
+        labels: [],
+        datasets: []
     });
 
-    const [metrics, setMetrics] = useState<MetricData>({
-        labels: Array.from({ length: 24 }, (_, i) => `${23-i}:00`).reverse(),
-        datasets: [
-            {
-                label: 'CPU使用率',
-                data: Array.from({ length: 24 }, () => Math.random() * 100),
-                borderColor: 'rgba(94, 129, 244, 1)',
-                backgroundColor: 'rgba(94, 129, 244, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 0,
-                borderWidth: 3,
-            },
-            {
-                label: '内存使用率',
-                data: Array.from({ length: 24 }, () => Math.random() * 100),
-                borderColor: 'rgba(255, 145, 156, 1)',
-                backgroundColor: 'rgba(255, 145, 156, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 0,
-                borderWidth: 3,
-            },
-        ],
-    });
+    useEffect(() => {
+        fetchServerDetails();
+    }, [serverId]);
+
+    const fetchServerDetails = async () => {
+        try {
+            const response = await fetch(`/api/zabbix/instances/${serverId}`);
+            if (!response.ok) {
+                throw new Error('获取服务器详情失败');
+            }
+            const data = await response.json();
+            setServerInfo(data);
+
+            // 处理监控指标数据
+            if (data.metrics && data.metrics.length > 0) {
+                const timestamps = [...new Set(data.metrics.map((m: any) => 
+                    new Date(m.timestamp).toLocaleTimeString('zh-CN')
+                ))].sort();
+
+                const cpuData = data.metrics
+                    .filter((m: any) => m.metricType === 'cpu')
+                    .sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                    .map((m: any) => m.value);
+
+                const memoryData = data.metrics
+                    .filter((m: any) => m.metricType === 'memory')
+                    .sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                    .map((m: any) => m.value);
+
+                setMetrics({
+                    labels: timestamps,
+                    datasets: [
+                        {
+                            label: 'CPU使用率',
+                            data: cpuData,
+                            borderColor: 'rgba(94, 129, 244, 1)',
+                            backgroundColor: 'rgba(94, 129, 244, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 0,
+                            borderWidth: 3,
+                        },
+                        {
+                            label: '内存使用率',
+                            data: memoryData,
+                            borderColor: 'rgba(255, 145, 156, 1)',
+                            backgroundColor: 'rgba(255, 145, 156, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 0,
+                            borderWidth: 3,
+                        },
+                    ],
+                });
+            }
+        } catch (error) {
+            console.error('获取服务器详情失败:', error);
+            toast.error('获取服务器详情失败');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleTabChange = (tabId: string) => {
         const tab = TABS.find(t => t.id === tabId);
@@ -144,238 +189,192 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
         router.push('/installation/servers');
     };
 
-    // 预加载数据
-    useEffect(() => {
-        const preloadData = async () => {
-            try {
-                // 这里可以添加实际的数据获取逻辑
-                // const response = await fetch(`/api/servers/${serverId}`);
-                // const data = await response.json();
-                // setServerInfo(data);
-            } catch (error) {
-                console.error('Failed to load server data:', error);
-            }
-        };
+    if (loading || !serverInfo) {
+        return (
+            <div className="animate-pulse">
+                <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+                <div className="space-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                </div>
+            </div>
+        );
+    }
 
-        preloadData();
-    }, [serverId]);
+    const chartOptions = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top' as const,
+            },
+            title: {
+                display: true,
+                text: '资源使用率趋势（24小时）',
+            },
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                title: {
+                    display: true,
+                    text: '使用率 (%)'
+                }
+            }
+        }
+    };
 
     return (
-        <div className="flex-1 flex flex-col">
-            {/* 固定在顶部的标题和标签页 */}
-            <div className="sticky top-0 z-10 bg-white dark:bg-gray-800">
-                {/* 顶部标题和返回按钮 */}
-                <div className="max-w-7xl mx-auto px-6 py-4">
-                    <div className="flex items-center">
-                        <button
-                            onClick={handleBack}
-                            className="mr-4 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-                        >
-                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
-                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                            {serverInfo.name}
-                        </h1>
-                    </div>
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <div>
+                    <button
+                        onClick={handleBack}
+                        className="mb-4 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                        ← 返回列表
+                    </button>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {serverInfo.name}
+                    </h2>
                 </div>
-
-                {/* 标签页导航 */}
-                <div className="border-b border-gray-200 dark:border-gray-700">
-                    <div className="max-w-7xl mx-auto px-6">
-                        <nav className="flex space-x-8">
-                            {TABS.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => handleTabChange(tab.id)}
-                                    className={`
-                                        whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                                        ${activeTab === tab.id
-                                            ? 'border-purple-500 text-purple-600 dark:text-purple-400'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                                        }
-                                    `}
-                                >
-                                    {tab.name}
-                                </button>
-                            ))}
-                        </nav>
-                    </div>
+                <div className="flex space-x-2">
+                    <button
+                        className={`px-4 py-2 rounded-md text-sm font-medium ${
+                            serverInfo.status === 'running'
+                                ? 'bg-red-600 text-white hover:bg-red-700'
+                                : 'bg-green-600 text-white hover:bg-green-700'
+                        }`}
+                    >
+                        {serverInfo.status === 'running' ? '停止' : '启动'}
+                    </button>
+                    <button
+                        className="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700"
+                    >
+                        重启
+                    </button>
                 </div>
             </div>
 
-            {/* 可滚动的内容区域 */}
-            <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-                <div className="max-w-7xl mx-auto px-6 py-6">
-                    <div className="space-y-6">
-                        {activeTab === 'overview' && (
-                            <div className="space-y-6">
-                                {/* 基本信息卡片 */}
-                                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-                                    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                                            基本信息
-                                        </h3>
-                                    </div>
-                                    <div className="px-6 py-4">
-                                        <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                            <div>
-                                                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">名称</dt>
-                                                <dd className="mt-1 text-sm text-gray-900 dark:text-white">{serverInfo.name}</dd>
-                                            </div>
-                                            <div>
-                                                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">组织</dt>
-                                                <dd className="mt-1 text-sm text-gray-900 dark:text-white">{serverInfo.organization}</dd>
-                                            </div>
-                                            <div>
-                                                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">地区</dt>
-                                                <dd className="mt-1 text-sm text-gray-900 dark:text-white">{serverInfo.region}</dd>
-                                            </div>
-                                            <div>
-                                                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">部署模式</dt>
-                                                <dd className="mt-1 text-sm text-gray-900 dark:text-white">
-                                                    {serverInfo.mode === 'single' ? '单机部署' : 
-                                                     serverInfo.mode === 'cluster' ? '集群部署' : '分布式部署'}
-                                                </dd>
-                                            </div>
-                                            <div>
-                                                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">版本</dt>
-                                                <dd className="mt-1 text-sm text-gray-900 dark:text-white">{serverInfo.version}</dd>
-                                            </div>
-                                            <div>
-                                                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">运行状态</dt>
-                                                <dd className="mt-1">
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                        serverInfo.status === 'running'
-                                                            ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                                                            : serverInfo.status === 'stopped'
-                                                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
-                                                            : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-                                                    }`}>
-                                                        {serverInfo.status === 'running' ? '运行中' : 
-                                                         serverInfo.status === 'stopped' ? '已停止' : '错误'}
-                                                    </span>
-                                                </dd>
-                                            </div>
-                                        </dl>
-                                    </div>
-                                </div>
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+                <div className="border-b border-gray-200 dark:border-gray-700">
+                    <nav className="-mb-px flex">
+                        {TABS.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => handleTabChange(tab.id)}
+                                className={`${
+                                    activeTab === tab.id
+                                        ? 'border-purple-500 text-purple-600 dark:text-purple-400'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
+                            >
+                                {tab.name}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
 
-                                {/* 资源使用率图表 */}
-                                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-                                    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                                            资源使用率
-                                        </h3>
-                                    </div>
-                                    <div className="p-6">
-                                        <AntLine options={{
-                                            responsive: true,
-                                            maintainAspectRatio: false,
-                                            plugins: {
-                                                legend: {
-                                                    position: 'top' as const,
-                                                    labels: {
-                                                        usePointStyle: true,
-                                                        pointStyle: 'circle',
-                                                        padding: 20,
-                                                        font: {
-                                                            size: 12,
-                                                            family: "'Inter', sans-serif"
-                                                        }
-                                                    }
-                                                },
-                                                title: {
-                                                    display: false
-                                                },
-                                                tooltip: {
-                                                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                                    titleColor: '#1a1a1a',
-                                                    bodyColor: '#1a1a1a',
-                                                    borderColor: 'rgba(0, 0, 0, 0.1)',
-                                                    borderWidth: 1,
-                                                    padding: 12,
-                                                    boxPadding: 6,
-                                                    usePointStyle: true,
-                                                    bodyFont: {
-                                                        size: 12,
-                                                        family: "'Inter', sans-serif"
-                                                    }
-                                                }
-                                            },
-                                            scales: {
-                                                y: {
-                                                    beginAtZero: true,
-                                                    max: 100,
-                                                    grid: {
-                                                        color: 'rgba(0, 0, 0, 0.05)',
-                                                        border: {
-                                                            display: false
-                                                        }
-                                                    },
-                                                    ticks: {
-                                                        padding: 10,
-                                                        color: 'rgba(0, 0, 0, 0.6)',
-                                                        font: {
-                                                            size: 11
-                                                        }
-                                                    },
-                                                    title: {
-                                                        display: true,
-                                                        text: '使用率 (%)',
-                                                        padding: 10,
-                                                        color: 'rgba(0, 0, 0, 0.6)',
-                                                        font: {
-                                                            size: 12,
-                                                            weight: 500
-                                                        }
-                                                    }
-                                                },
-                                                x: {
-                                                    grid: {
-                                                        display: false,
-                                                        border: {
-                                                            display: false
-                                                        }
-                                                    },
-                                                    ticks: {
-                                                        padding: 10,
-                                                        color: 'rgba(0, 0, 0, 0.6)',
-                                                        font: {
-                                                            size: 11
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        } as ChartOptions<'line'>} data={metrics} 
-                                        style={{ height: '400px' }}
-                                        />
-                                    </div>
+                <div className="p-6">
+                    {activeTab === 'overview' && (
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">状态</h4>
+                                    <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
+                                        {serverInfo.status === 'running' ? '运行中' : serverInfo.status === 'stopped' ? '已停止' : '错误'}
+                                    </p>
+                                </div>
+                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">版本</h4>
+                                    <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
+                                        {serverInfo.version}
+                                    </p>
+                                </div>
+                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">运行时间</h4>
+                                    <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
+                                        {serverInfo.uptime}
+                                    </p>
+                                </div>
+                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">最后备份</h4>
+                                    <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
+                                        {new Date(serverInfo.lastBackup).toLocaleString('zh-CN')}
+                                    </p>
                                 </div>
                             </div>
-                        )}
 
-                        {activeTab === 'database-backup' && (
-                            <DatabaseBackupTab />
-                        )}
+                            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <Line options={chartOptions} data={metrics} />
+                            </div>
 
-                        {activeTab === 'config-backup' && (
-                            <ConfigBackupTab />
-                        )}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">基本信息</h4>
+                                    <dl className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <dt className="text-sm text-gray-500 dark:text-gray-400">组织</dt>
+                                            <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                {serverInfo.organization}
+                                            </dd>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <dt className="text-sm text-gray-500 dark:text-gray-400">区域</dt>
+                                            <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                {serverInfo.region}
+                                            </dd>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <dt className="text-sm text-gray-500 dark:text-gray-400">部署模式</dt>
+                                            <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                {serverInfo.mode === 'single' ? '单机' : serverInfo.mode === 'cluster' ? '集群' : '分布式'}
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                </div>
 
-                        {activeTab === 'data-archive' && (
-                            <DataArchiveTab />
-                        )}
+                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">备份信息</h4>
+                                    <dl className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <dt className="text-sm text-gray-500 dark:text-gray-400">数据库备份</dt>
+                                            <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                {new Date(serverInfo.lastBackup).toLocaleString('zh-CN')}
+                                            </dd>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <dt className="text-sm text-gray-500 dark:text-gray-400">配置备份</dt>
+                                            <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                {new Date(serverInfo.lastConfigBackup).toLocaleString('zh-CN')}
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
-                        {activeTab === 'management' && (
-                            <ManagementTab serverId={serverId} />
-                        )}
+                    {activeTab === 'database-backup' && (
+                        <DatabaseBackupTab />
+                    )}
 
-                        {activeTab === 'self-monitoring' && (
-                            <SelfMonitoringTab serverId={serverId} />
-                        )}
-                    </div>
+                    {activeTab === 'config-backup' && (
+                        <ConfigBackupTab />
+                    )}
+
+                    {activeTab === 'data-archive' && (
+                        <DataArchiveTab />
+                    )}
+
+                    {activeTab === 'management' && (
+                        <ManagementTab serverId={serverId} />
+                    )}
+
+                    {activeTab === 'self-monitoring' && (
+                        <SelfMonitoringTab serverId={serverId} />
+                    )}
                 </div>
             </div>
         </div>

@@ -150,6 +150,7 @@ export default function ServersPage() {
                                                 <div className="mt-2 text-sm text-green-700">
                                                     <p>Zabbix 服务已成功部署！您可以通过以下信息访问系统：</p>
                                                 </div>
+
                                             </div>
                                         </div>
                                     </div>

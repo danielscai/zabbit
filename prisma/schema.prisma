@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ZabbixInstance {
+  id            String   @id @default(cuid())
+  name          String
+  organization  String
+  region        String
+  mode          String   // 'single' | 'cluster' | 'distributed'
+  status        String   // 'running' | 'stopped' | 'error'
+  version       String?
+  accessUrl     String?
+  username      String?
+  password      String?
+  uptime        String?
+  lastBackup    DateTime?
+  lastConfigBackup DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 监控指标数据
+  metrics       ZabbixMetric[]
+}
+
+model ZabbixMetric {
+  id            String   @id @default(cuid())
+  instanceId    String
+  metricType    String   // 'cpu' | 'memory'
+  value         Float
+  timestamp     DateTime @default(now())
+  
+  instance      ZabbixInstance @relation(fields: [instanceId], references: [id])
+
+  @@index([instanceId, timestamp])
+}
+
+model DeploymentLog {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  instanceId    String
+  step          String   // 'check-docker' | 'check-compose' | 'pull-images' | 'deploy-services'
+  status        String   // 'success' | 'error'
+  logs          String[] // 存储日志信息
+  errorMessage  String?  // 存储错误信息
+}
