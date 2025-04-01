@@ -108,7 +108,7 @@ const TABS = [
 
 export default function ServerDetail({ serverId, activeTab = 'overview' }: ServerDetailProps) {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [serverInfo, setServerInfo] = useState<ServerInfo>({
         id: serverId,
         name: '实例名称',
@@ -185,8 +185,6 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
         } catch (error) {
             console.error('获取服务器详情失败:', error);
             toast.error('获取服务器详情失败');
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -200,19 +198,6 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
     const handleBack = () => {
         router.push('/installation/servers');
     };
-
-    if (loading || !serverInfo) {
-        return (
-            <div className="animate-pulse">
-                <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-                <div className="space-y-3">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-                </div>
-            </div>
-        );
-    }
 
     const chartOptions = {
         responsive: true,
