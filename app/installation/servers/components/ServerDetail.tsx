@@ -20,7 +20,7 @@ import DatabaseBackupTab from '@/app/server/components/DatabaseBackupTab';
 import ConfigBackupTab from '@/app/server/components/ConfigBackupTab';
 import DataArchiveTab from '@/app/server/components/DataArchiveTab';
 import { Form, Button, Table, Modal, Input, message, Tabs, Card, Alert, List, Timeline, Collapse } from 'antd';
-import { PlusOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
+import { PlusOutlined, DownOutlined, RightOutlined, HistoryOutlined } from '@ant-design/icons';
 import { Line as AntLine } from '@ant-design/plots';
 import DeploymentLogs from './DeploymentLogs';
 
@@ -91,6 +91,7 @@ interface ServerInfo {
     uptime: string;
     lastBackup: string;
     lastConfigBackup: string;
+    createdAt: string;
     metrics: {
         id: string;
         metricType: string;
@@ -124,6 +125,7 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
         uptime: '24h',
         lastBackup: '2024-03-20',
         lastConfigBackup: '2024-03-20',
+        createdAt: '',
         metrics: []
     });
     const [metrics, setMetrics] = useState<MetricData>({
@@ -331,6 +333,7 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 {/* 左侧：基本信息 */}
                                 <div className="lg:col-span-1 space-y-6">
+                                    {/* 基本信息卡片 */}
                                     <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                                         <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">基本信息</h4>
                                         <dl className="space-y-2">
@@ -352,9 +355,28 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                                                     {serverInfo.mode === 'single' ? '单机' : serverInfo.mode === 'cluster' ? '集群' : '分布式'}
                                                 </dd>
                                             </div>
+                                            <div className="flex justify-between">
+                                                <dt className="text-sm text-gray-500 dark:text-gray-400">部署时间</dt>
+                                                <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {new Date(serverInfo.createdAt).toLocaleString('zh-CN')}
+                                                </dd>
+                                            </div>
                                         </dl>
+                                        {!shouldShowDeployLogs && (
+                                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                                <Button 
+                                                    type="default"
+                                                    icon={<HistoryOutlined />}
+                                                    onClick={() => setIsDeployLogsModalOpen(true)}
+                                                    className="w-full flex items-center justify-center text-gray-600 hover:text-purple-600 hover:border-purple-600"
+                                                >
+                                                    查看部署记录
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
 
+                                    {/* 备份信息卡片 */}
                                     <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                                         <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">备份信息</h4>
                                         <dl className="space-y-2">
@@ -418,21 +440,10 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
                                             <DeploymentLogs 
                                                 instanceId={serverId} 
-                                                refreshInterval={10000}  // 增加到10秒
+                                                refreshInterval={10000}
                                                 autoRefresh={serverInfo.status === 'installing'} 
                                             />
                                         </div>
-                                    )}
-
-                                    {/* 查看完整日志按钮 */}
-                                    {!shouldShowDeployLogs && (
-                                        <Button 
-                                            type="link" 
-                                            onClick={() => setIsDeployLogsModalOpen(true)}
-                                            className="w-full text-center"
-                                        >
-                                            查看部署日志历史
-                                        </Button>
                                     )}
                                 </div>
                             </div>
@@ -463,17 +474,26 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
 
             {/* 部署日志历史弹窗 */}
             <Modal
-                title="部署日志历史"
+                title="部署记录"
                 open={isDeployLogsModalOpen}
                 onCancel={() => setIsDeployLogsModalOpen(false)}
                 width={800}
                 footer={null}
+                className="deployment-logs-modal"
             >
-                <DeploymentLogs 
-                    instanceId={serverId} 
-                    refreshInterval={0}
-                    autoRefresh={false}
-                />
+                <div className="py-2">
+                    <Alert
+                        message="部署记录包含了服务器的完整部署历史，可用于追踪部署过程和排查问题。"
+                        type="info"
+                        showIcon
+                        className="mb-4"
+                    />
+                    <DeploymentLogs 
+                        instanceId={serverId} 
+                        refreshInterval={0}
+                        autoRefresh={false}
+                    />
+                </div>
             </Modal>
         </div>
     );
