@@ -44,6 +44,11 @@ export default function ServerList({ onNewServer }: ServerListProps) {
 
     const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
 
+    const handleSelectServer = (serverId: string) => {
+        setSelectedServerId(serverId);
+        router.push(`/installation/servers/${serverId}/management`);
+    };
+
     if (selectedServerId) {
         return <ServerDetail 
             serverId={selectedServerId} 
@@ -134,12 +139,12 @@ export default function ServerList({ onNewServer }: ServerListProps) {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div className="flex space-x-2">
-                                            <Link 
-                                                href={`/installation/servers/${server.id}/manage`}
+                                            <button 
+                                                onClick={() => handleSelectServer(server.id)}
                                                 className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                                             >
                                                 管理
-                                            </Link>
+                                            </button>
                                             <Link 
                                                 href={`/installation/servers/${server.id}`}
                                                 className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"

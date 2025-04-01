@@ -80,11 +80,11 @@ interface MonitoringEvent {
 
 const TABS = [
     { id: 'overview', name: '概览', path: '' },
+    { id: 'management', name: '管理', path: '/management' },
+    { id: 'self-monitoring', name: '自监控', path: '/self-monitoring' },
     { id: 'database-backup', name: '数据库备份', path: '/database-backup' },
     { id: 'config-backup', name: '配置备份', path: '/config-backup' },
     { id: 'data-archive', name: '数据归档', path: '/data-archive' },
-    { id: 'management', name: '管理', path: '/management' },
-    { id: 'self-monitoring', name: '自监控', path: '/self-monitoring' },
 ];
 
 interface ServerDetailProps {

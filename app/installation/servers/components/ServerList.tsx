@@ -133,7 +133,7 @@ export default function ServerList({ onNewServer }: ServerListProps) {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
                                             <Link 
-                                                href={`/installation/servers/${server.id}/manage`}
+                                                href={`/installation/servers/${server.id}/management`}
                                                 className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                                             >
                                                 管理
