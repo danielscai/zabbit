@@ -507,16 +507,42 @@ export async function POST(request: Request) {
     // 处理操作结果
     if (!result.success) {
       return NextResponse.json(
-        { error: result.error },
+        { 
+          success: false,
+          error: result.error,
+          logs: result.logs || []
+        },
         { status: 500 }
       );
     }
     
-    return NextResponse.json({ logs: result.logs });
+    // 获取访问地址
+    let accessUrl = '';
+    if (config && step === 'deploy-services') {
+      if (config.mode === 'single') {
+        accessUrl = `http://localhost:${parseInt(config.port) + 1}`;
+      } else if (config.mode === 'cluster') {
+        accessUrl = `http://localhost:${parseInt(config.port) + 2}`;
+      } else {
+        accessUrl = `http://localhost:${parseInt(config.port) + 3}`;
+      }
+    }
+    
+    return NextResponse.json({
+      success: true,
+      logs: result.logs || [],
+      accessUrl,
+      username: config?.username,
+      password: config?.password
+    });
   } catch (error: any) {
     console.error('API 错误:', error);
     return NextResponse.json(
-      { error: error.message || '处理请求时发生错误' },
+      { 
+        success: false,
+        error: error.message || '处理请求时发生错误',
+        logs: []
+      },
       { status: 500 }
     );
   }
