@@ -13,6 +13,7 @@ interface Server {
     mode: 'single' | 'cluster' | 'distributed';
     status: 'running' | 'stopped' | 'error' | 'installing';
     createdAt: string;
+    accessUrl?: string;
 }
 
 interface ServerListProps {
@@ -191,6 +192,9 @@ export default function ServerList({ onNewServer }: ServerListProps) {
                                     状态
                                 </th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    操作
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     创建时间
                                 </th>
                             </tr>
@@ -198,7 +202,7 @@ export default function ServerList({ onNewServer }: ServerListProps) {
                         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             {servers.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                    <td colSpan={7} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300 text-center">
                                         暂无Zabbix实例
                                     </td>
                                 </tr>
@@ -239,6 +243,20 @@ export default function ServerList({ onNewServer }: ServerListProps) {
                                                     )}
                                                     {status.text}
                                                 </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                                {server.status === 'running' && server.accessUrl && (
+                                                    <a
+                                                        href={server.accessUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        title={`访问地址: ${server.accessUrl}`}
+                                                        className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors duration-200"
+                                                    >
+                                                        访问
+                                                    </a>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                                 {new Date(server.createdAt).toLocaleString('zh-CN')}
