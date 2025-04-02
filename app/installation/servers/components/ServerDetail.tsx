@@ -23,6 +23,7 @@ import { Form, Button, Table, Modal, Input, message, Tabs, Card, Alert, List, Ti
 import { PlusOutlined, DownOutlined, RightOutlined, HistoryOutlined } from '@ant-design/icons';
 import { Line as AntLine } from '@ant-design/plots';
 import DeploymentLogs from './DeploymentLogs';
+import Link from 'next/link';
 
 // 注册 Chart.js 组件
 ChartJS.register(
@@ -78,6 +79,7 @@ interface MonitoringEvent {
 interface ServerDetailProps {
     serverId: string;
     activeTab?: string;
+    children?: React.ReactNode;
 }
 
 interface ServerInfo {
@@ -107,9 +109,10 @@ const TABS = [
     { id: 'database-backup', name: '数据库备份', path: '/database-backup' },
     { id: 'config-backup', name: '配置备份', path: '/config-backup' },
     { id: 'data-archive', name: '数据归档', path: '/data-archive' },
+    { id: 'delete', name: '删除', path: '/delete', className: 'text-red-500 hover:text-red-700' }
 ];
 
-export default function ServerDetail({ serverId, activeTab = 'overview' }: ServerDetailProps) {
+export default function ServerDetail({ serverId, activeTab = 'overview', children }: ServerDetailProps) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [showDeployLogs, setShowDeployLogs] = useState(true);
@@ -268,23 +271,27 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                     </div>
 
                     {/* Tabs */}
-                    <div className="border-b border-gray-200 dark:border-gray-700">
-                        <nav className="-mb-px flex space-x-8">
-                            {TABS.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => handleTabChange(tab.id)}
-                                    className={`
-                                        whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm
-                                        ${activeTab === tab.id
-                                            ? 'border-purple-500 text-purple-600 dark:text-purple-400'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                                        }
-                                    `}
-                                >
-                                    {tab.name}
-                                </button>
-                            ))}
+                    <div className="border-b border-gray-200">
+                        <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+                            {TABS.map((tab) => {
+                                const isActive = activeTab === tab.id;
+                                return (
+                                    <Link
+                                        key={tab.id}
+                                        href={`/installation/servers/${serverId}${tab.path}`}
+                                        className={`
+                                            ${isActive
+                                                ? 'border-purple-500 text-purple-600'
+                                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                                            }
+                                            ${tab.className || ''}
+                                            whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium
+                                        `}
+                                    >
+                                        {tab.name}
+                                    </Link>
+                                );
+                            })}
                         </nav>
                     </div>
                 </div>
@@ -508,13 +515,11 @@ export default function ServerDetail({ serverId, activeTab = 'overview' }: Serve
                         <DataArchiveTab />
                     )}
 
-                    {activeTab === 'management' && (
-                        <ManagementTab serverId={serverId} />
-                    )}
-
                     {activeTab === 'self-monitoring' && (
                         <SelfMonitoringTab serverId={serverId} />
                     )}
+
+                    {activeTab === 'delete' && children}
                 </div>
             </div>
 
