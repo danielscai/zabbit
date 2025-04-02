@@ -173,13 +173,19 @@ async function deployServices(config: ServerConfig): Promise<DeploymentResult> {
         let composeContent = '';
         
         // 生成环境变量配置
-        const envConfig = `
+        const dbEnvConfig = `
           - POSTGRES_PASSWORD=${config.password}
           - POSTGRES_USER=${config.username}
+          - POSTGRES_DB=zabbix`;
+
+        const zabbixEnvConfig = `
+          - DB_SERVER_HOST=zabbit-postgres-${shortId}
+          - DB_SERVER_PORT=5432
+          - POSTGRES_USER=${config.username}
+          - POSTGRES_PASSWORD=${config.password}
           - POSTGRES_DB=zabbix
-          - ZBX_SERVER_HOST=zabbix-server
-          - PHP_TZ=Asia/Shanghai
-        `;
+          - ZBX_SERVER_HOST=zabbit-server-${shortId}
+          - PHP_TZ=Asia/Shanghai`;
         
         if (config.mode === 'single') {
           logs.push('配置单机模式部署...');
@@ -192,7 +198,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     environment:
-      ${envConfig}
+      ${dbEnvConfig}
     restart: unless-stopped
     networks:
       - zabbit-network
@@ -206,8 +212,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - zabbix-server-data:/var/lib/zabbix
     environment:
-      - DB_SERVER_HOST=postgres
-      ${envConfig}
+      ${zabbixEnvConfig}
     depends_on:
       - postgres
     restart: unless-stopped
@@ -220,7 +225,7 @@ services:
     ports:
       - "${parseInt(config.port) + 1}:8080"
     environment:
-      ${envConfig}
+      ${zabbixEnvConfig}
     depends_on:
       - postgres
       - zabbix-server
@@ -246,7 +251,7 @@ services:
     volumes:
       - postgres-master-data:/var/lib/postgresql/data
     environment:
-      ${envConfig}
+      ${dbEnvConfig}
     restart: unless-stopped
     networks:
       - zabbit-network
@@ -257,7 +262,7 @@ services:
     volumes:
       - postgres-slave-data:/var/lib/postgresql/data
     environment:
-      ${envConfig}
+      ${dbEnvConfig}
     restart: unless-stopped
     networks:
       - zabbit-network
@@ -272,7 +277,7 @@ services:
       - zabbix-server-master-data:/var/lib/zabbix
     environment:
       - DB_SERVER_HOST=postgres-master
-      ${envConfig}
+      ${zabbixEnvConfig}
       - ZBX_NODEADDRESS=zabbit-server-master
     depends_on:
       - postgres-master
@@ -290,7 +295,7 @@ services:
       - zabbix-server-slave-data:/var/lib/zabbix
     environment:
       - DB_SERVER_HOST=postgres-slave
-      ${envConfig}
+      ${zabbixEnvConfig}
       - ZBX_NODEADDRESS=zabbit-server-slave
     depends_on:
       - postgres-slave
@@ -316,7 +321,7 @@ services:
     ports:
       - "${parseInt(config.port) + 4}:8080"
     environment:
-      ${envConfig}
+      ${zabbixEnvConfig}
     depends_on:
       - postgres-master
       - zabbix-server-master
@@ -346,7 +351,7 @@ services:
     volumes:
       - postgres-master-data:/var/lib/postgresql/data
     environment:
-      ${envConfig}
+      ${dbEnvConfig}
     restart: unless-stopped
     networks:
       - zabbit-network
@@ -357,7 +362,7 @@ services:
     volumes:
       - postgres-slave-1-data:/var/lib/postgresql/data
     environment:
-      ${envConfig}
+      ${dbEnvConfig}
     restart: unless-stopped
     networks:
       - zabbit-network
@@ -368,7 +373,7 @@ services:
     volumes:
       - postgres-slave-2-data:/var/lib/postgresql/data
     environment:
-      ${envConfig}
+      ${dbEnvConfig}
     restart: unless-stopped
     networks:
       - zabbit-network
@@ -383,7 +388,7 @@ services:
       - zabbix-server-master-data:/var/lib/zabbix
     environment:
       - DB_SERVER_HOST=postgres-master
-      ${envConfig}
+      ${zabbixEnvConfig}
     depends_on:
       - postgres-master
     restart: unless-stopped
@@ -400,7 +405,7 @@ services:
       - zabbix-server-node-1-data:/var/lib/zabbix
     environment:
       - DB_SERVER_HOST=postgres-slave-1
-      ${envConfig}
+      ${zabbixEnvConfig}
     depends_on:
       - postgres-slave-1
     restart: unless-stopped
@@ -417,7 +422,7 @@ services:
       - zabbix-server-node-2-data:/var/lib/zabbix
     environment:
       - DB_SERVER_HOST=postgres-slave-2
-      ${envConfig}
+      ${zabbixEnvConfig}
     depends_on:
       - postgres-slave-2
     restart: unless-stopped
@@ -430,7 +435,7 @@ services:
     ports:
       - "${parseInt(config.port) + 3}:8080"
     environment:
-      ${envConfig}
+      ${zabbixEnvConfig}
     depends_on:
       - postgres-master
       - zabbix-server-master
@@ -444,7 +449,7 @@ services:
     ports:
       - "${parseInt(config.port) + 4}:8080"
     environment:
-      ${envConfig}
+      ${zabbixEnvConfig}
     depends_on:
       - postgres-slave-1
       - zabbix-server-node-1
@@ -458,7 +463,7 @@ services:
     ports:
       - "${parseInt(config.port) + 5}:8080"
     environment:
-      ${envConfig}
+      ${zabbixEnvConfig}
     depends_on:
       - postgres-slave-2
       - zabbix-server-node-2
