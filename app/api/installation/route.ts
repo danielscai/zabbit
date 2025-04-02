@@ -6,6 +6,16 @@ import { prisma } from '@/lib/prisma';
 
 const execAsync = promisify(exec);
 
+// 生成6-8位的短UUID
+function generateShortId(length: number = 6): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 interface ServerConfig {
   mode: 'single' | 'cluster' | 'distributed';
   organization: string;
@@ -118,16 +128,20 @@ async function testImagePull(): Promise<CheckResult> {
 // 部署服务
 async function deployServices(config: ServerConfig): Promise<DeploymentResult> {
   try {
+    // 生成短UUID
+    const shortId = generateShortId(6);
+    
     // 创建实例记录
     const instance = await prisma.zabbixInstance.create({
       data: {
-        name: `Zabbix-${config.mode}-${new Date().getTime()}`,
+        id: shortId,  // 使用短UUID作为实例ID
+        name: `Zabbix-${config.mode}-${shortId}`,
         mode: config.mode,
         organization: config.organization,
         region: config.region,
         username: config.username,
         password: config.password,
-        status: 'installing',  // 初始状态为installing
+        status: 'installing',
         version: '6.4'
       }
     });
@@ -148,9 +162,12 @@ async function deployServices(config: ServerConfig): Promise<DeploymentResult> {
         const logs: string[] = ['开始部署 Zabbix 服务...'];
         
         // 创建临时目录存放 Docker Compose 文件
-        const deployDir = '/tmp/zabbit-deploy';
+        const deployDir = `/tmp/zabbit-deploy-${shortId}`;
         logs.push(`创建部署目录: ${deployDir}`);
         await execAsync(`mkdir -p ${deployDir}`);
+        
+        // 修改 Docker Compose 项目名称
+        const projectName = `zabbit-${shortId}`;
         
         // 根据部署模式选择不同的配置
         let composeContent = '';
@@ -171,7 +188,7 @@ async function deployServices(config: ServerConfig): Promise<DeploymentResult> {
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: zabbit-postgres
+    container_name: zabbit-postgres-${shortId}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     environment:
@@ -182,7 +199,7 @@ services:
 
   zabbix-server:
     image: zabbix/zabbix-server-pgsql:ubuntu-6.4-latest
-    container_name: zabbit-server
+    container_name: zabbit-server-${shortId}
     ports:
       - "${config.port}:10051"
     volumes:
@@ -199,7 +216,7 @@ services:
 
   zabbix-web:
     image: zabbix/zabbix-web-nginx-pgsql:ubuntu-6.4-latest
-    container_name: zabbit-web
+    container_name: zabbit-web-${shortId}
     ports:
       - "${parseInt(config.port) + 1}:8080"
     environment:
@@ -225,7 +242,7 @@ volumes:
 services:
   postgres-master:
     image: postgres:15-alpine
-    container_name: zabbit-postgres-master
+    container_name: zabbit-postgres-master-${shortId}
     volumes:
       - postgres-master-data:/var/lib/postgresql/data
     environment:
@@ -236,7 +253,7 @@ services:
 
   postgres-slave:
     image: postgres:15-alpine
-    container_name: zabbit-postgres-slave
+    container_name: zabbit-postgres-slave-${shortId}
     volumes:
       - postgres-slave-data:/var/lib/postgresql/data
     environment:
@@ -247,7 +264,7 @@ services:
 
   zabbix-server-master:
     image: zabbix/zabbix-server-pgsql:ubuntu-6.4-latest
-    container_name: zabbit-server-master
+    container_name: zabbit-server-master-${shortId}
     ports:
       - "${config.port}:10051"
     volumes:
@@ -265,7 +282,7 @@ services:
 
   zabbix-server-slave:
     image: zabbix/zabbix-server-pgsql:ubuntu-6.4-latest
-    container_name: zabbit-server-slave
+    container_name: zabbit-server-slave-${shortId}
     ports:
       - "${parseInt(config.port) + 1}:10051"
     volumes:
@@ -283,7 +300,7 @@ services:
 
   haproxy:
     image: haproxy:2.6-alpine
-    container_name: zabbit-haproxy
+    container_name: zabbit-haproxy-${shortId}
     ports:
       - "${parseInt(config.port) + 2}:8080"
       - "${parseInt(config.port) + 3}:10051"
@@ -295,7 +312,7 @@ services:
 
   zabbix-web:
     image: zabbix/zabbix-web-nginx-pgsql:ubuntu-6.4-latest
-    container_name: zabbit-web
+    container_name: zabbit-web-master-${shortId}
     ports:
       - "${parseInt(config.port) + 4}:8080"
     environment:
@@ -325,7 +342,7 @@ volumes:
 services:
   postgres-master:
     image: postgres:15-alpine
-    container_name: zabbit-postgres-master
+    container_name: zabbit-postgres-master-${shortId}
     volumes:
       - postgres-master-data:/var/lib/postgresql/data
     environment:
@@ -336,7 +353,7 @@ services:
 
   postgres-slave-1:
     image: postgres:15-alpine
-    container_name: zabbit-postgres-slave-1
+    container_name: zabbit-postgres-slave-1-${shortId}
     volumes:
       - postgres-slave-1-data:/var/lib/postgresql/data
     environment:
@@ -347,7 +364,7 @@ services:
 
   postgres-slave-2:
     image: postgres:15-alpine
-    container_name: zabbit-postgres-slave-2
+    container_name: zabbit-postgres-slave-2-${shortId}
     volumes:
       - postgres-slave-2-data:/var/lib/postgresql/data
     environment:
@@ -358,7 +375,7 @@ services:
 
   zabbix-server-master:
     image: zabbix/zabbix-server-pgsql:ubuntu-6.4-latest
-    container_name: zabbit-server-master
+    container_name: zabbit-server-master-${shortId}
     ports:
       - "${config.port}:10051"
     volumes:
@@ -375,7 +392,7 @@ services:
 
   zabbix-server-node-1:
     image: zabbix/zabbix-server-pgsql:ubuntu-6.4-latest
-    container_name: zabbit-server-node-1
+    container_name: zabbit-server-node-1-${shortId}
     ports:
       - "${parseInt(config.port) + 1}:10051"
     volumes:
@@ -392,7 +409,7 @@ services:
 
   zabbix-server-node-2:
     image: zabbix/zabbix-server-pgsql:ubuntu-6.4-latest
-    container_name: zabbit-server-node-2
+    container_name: zabbit-server-node-2-${shortId}
     ports:
       - "${parseInt(config.port) + 2}:10051"
     volumes:
@@ -409,7 +426,7 @@ services:
 
   zabbix-web-master:
     image: zabbix/zabbix-web-nginx-pgsql:ubuntu-6.4-latest
-    container_name: zabbit-web-master
+    container_name: zabbit-web-master-${shortId}
     ports:
       - "${parseInt(config.port) + 3}:8080"
     environment:
@@ -423,7 +440,7 @@ services:
 
   zabbix-web-node-1:
     image: zabbix/zabbix-web-nginx-pgsql:ubuntu-6.4-latest
-    container_name: zabbit-web-node-1
+    container_name: zabbit-web-node-1-${shortId}
     ports:
       - "${parseInt(config.port) + 4}:8080"
     environment:
@@ -437,7 +454,7 @@ services:
 
   zabbix-web-node-2:
     image: zabbix/zabbix-web-nginx-pgsql:ubuntu-6.4-latest
-    container_name: zabbit-web-node-2
+    container_name: zabbit-web-node-2-${shortId}
     ports:
       - "${parseInt(config.port) + 5}:8080"
     environment:
@@ -471,12 +488,12 @@ volumes:
         
         // 启动服务
         logs.push('启动 Zabbix 服务...');
-        const { stdout: composeOutput } = await execAsync(`cd ${deployDir} && docker compose up -d --build`);
+        const { stdout: composeOutput } = await execAsync(`cd ${deployDir} && docker compose -p ${projectName} up -d --build`);
         logs.push(composeOutput);
         
         // 检查服务状态
         logs.push('检查服务状态...');
-        const { stdout: statusOutput } = await execAsync(`cd ${deployDir} && docker compose ps`);
+        const { stdout: statusOutput } = await execAsync(`cd ${deployDir} && docker compose -p ${projectName} ps`);
         logs.push(statusOutput);
         
         // 等待服务启动
@@ -484,7 +501,7 @@ volumes:
         await new Promise(resolve => setTimeout(resolve, 5000));
         
         // 获取容器ID列表
-        const { stdout: containerIds } = await execAsync(`cd ${deployDir} && docker compose ps -q`);
+        const { stdout: containerIds } = await execAsync(`cd ${deployDir} && docker compose -p ${projectName} ps -q`);
         const containerIdList = containerIds.split('\n').filter(id => id.length > 0);
 
         // 获取服务访问地址
